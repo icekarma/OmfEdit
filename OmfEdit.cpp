@@ -1,44 +1,64 @@
 #include "OmfFile.h"
+
+#include <cstddef>
+
+#include <exception>
+#include <format>
 #include <iostream>
 
 int main( int argc, char* argv[] ) {
     if ( argc < 3 ) {
-        std::cerr << "Usage:\n"
-                  << "  omfedit <input.obj> <output.obj> [old_symbol new_symbol]\n";
+        std::cerr << std::format(
+            "Usage:\n"
+            "  {} <input.obj> <output.obj> [old_symbol new_symbol]\n",
+            argv[0]
+        );
         return 1;
     }
 
     try {
-        Omf::OmfLoadOptions loadOpts{};
+        Omf::OmfLoadOptions loadOpts { };
         loadOpts.checksumValidation = Omf::ChecksumValidation::WarnCallback;
-        loadOpts.onChecksumWarning  = []( const Omf::OmfChecksumWarning& w ) {
-            std::cerr << "Warning: Record #" << w.recordIndex
-                      << " (type 0x" << std::hex << static_cast<int>( w.recordType )
-                      << ") at offset 0x" << w.fileOffset << std::dec
-                      << " has bad checksum (expected 0x" << std::hex
-                      << static_cast<int>( w.expectedChecksum ) << ", got 0x"
-                      << static_cast<int>( w.actualChecksum ) << std::dec << ")\n";
+        loadOpts.onChecksumWarning  = []( Omf::OmfChecksumWarning const& w ) {
+            std::cerr << std::format(
+                "Warning: Record #{} (type 0x{:02X}) at offset 0x{:X} has bad checksum (expected 0x{:02X}, got 0x{:02X})\n",
+                w.recordIndex,
+                static_cast<unsigned>( w.recordType ),
+                w.fileOffset,
+                static_cast<unsigned>( w.expectedChecksum ),
+                static_cast<unsigned>( w.actualChecksum )
+            );
         };
 
-        Omf::OmfFile objFile = Omf::OmfFile::LoadFromFile( argv[1], loadOpts );
+        Omf::OmfFile objFile { Omf::OmfFile::LoadFromFile( argv[1], loadOpts ) };
 
         if ( argc >= 5 ) {
-            std::size_t const count = objFile.RenameSymbol( argv[3], argv[4] );
-            std::cout << "Renamed " << count << " occurrence(s) of '"
-                      << argv[3] << "' -> '" << argv[4] << "'.\n";
+            std::size_t const count { objFile.RenameSymbol( argv[3], argv[4] ) };
+            std::cout << std::format(
+                "Renamed {} occurrence(s) of '{}' -> '{}'.\n",
+                count,
+                argv[3],
+                argv[4]
+            );
         }
 
         objFile.SaveToFile( argv[2] );
-        std::cout << "Saved " << objFile.GetRecords().size()
-                  << " OMF record(s) to " << argv[2] << ".\n";
+        std::cout << std::format(
+            "Saved {} OMF record(s) to {}.\n",
+            objFile.GetRecords( ).size( ),
+            argv[2]
+        );
         return 0;
-    } catch ( const Omf::OmfParseException& ex ) {
-        std::cerr << "OMF Parse Error at offset 0x" << std::hex << ex.GetFileOffset()
-                  << " (record 0x" << static_cast<int>( ex.GetRecordType() ) << "): "
-                  << ex.what() << "\n";
+    } catch ( Omf::OmfParseException const& ex ) {
+        std::cerr << std::format(
+            "OMF Parse Error at offset 0x{:X} (record 0x{:02X}): {}\n",
+            ex.GetFileOffset( ),
+            static_cast<unsigned>( ex.GetRecordType( ) ),
+            ex.what( )
+        );
         return 2;
-    } catch ( const std::exception& ex ) {
-        std::cerr << "Error: " << ex.what() << "\n";
+    } catch ( std::exception const& ex ) {
+        std::cerr << std::format( "Error: {}\n", ex.what( ) );
         return 3;
     }
 }
