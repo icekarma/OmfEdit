@@ -94,7 +94,6 @@ clean:
 	rm -f $(OBJDIR)/*.o $(OBJDIR)/*.d
 	rm -f $(LIBDIR)/*.a $(LIBDIR)/*.so
 	rm -f $(BINDIR)/omfdump $(BINDIR)/omfexplode $(BINDIR)/omfedit
-	rm -f *.o *.d *.a *.so omfdump omfexplode omfedit
 	@if [ -d $(OBJDIR) ]; then rmdir --ignore-fail-on-non-empty $(OBJDIR) 2>/dev/null || rmdir $(OBJDIR) 2>/dev/null || true; fi
 	@if [ -d $(LIBDIR) ]; then rmdir --ignore-fail-on-non-empty $(LIBDIR) 2>/dev/null || rmdir $(LIBDIR) 2>/dev/null || true; fi
 	@if [ -d $(BINDIR) ]; then rmdir --ignore-fail-on-non-empty $(BINDIR) 2>/dev/null || rmdir $(BINDIR) 2>/dev/null || true; fi
