@@ -42,12 +42,12 @@ namespace {
             }
         }
 
-        std::size_t AddLname( std::string_view name ) {
+        std::size_t AddLname( std::string_view const name ) {
             _lnames.emplace_back( name );
             return _lnames.size( );
         }
 
-        std::size_t AddSegment( Omf::NameIndex segNameIdx, Omf::NameIndex classNameIdx ) {
+        std::size_t AddSegment( Omf::NameIndex const segNameIdx, Omf::NameIndex const classNameIdx ) {
             std::string label { ResolveNameRaw(   segNameIdx ) };
             std::string cls   { ResolveNameRaw( classNameIdx ) };
             if ( !cls.empty( ) ) {
@@ -57,17 +57,17 @@ namespace {
             return _segments.size( );
         }
 
-        std::size_t AddGroup( Omf::NameIndex groupNameIdx ) {
+        std::size_t AddGroup( Omf::NameIndex const groupNameIdx ) {
             _groups.push_back( ResolveNameRaw( groupNameIdx ) );
             return _groups.size( );
         }
 
-        std::size_t AddExternal( std::string_view name ) {
+        std::size_t AddExternal( std::string_view const name ) {
             _externals.emplace_back( name );
             return _externals.size( );
         }
 
-        std::size_t AddComdatExternal( Omf::NameIndex logicalNameIdx ) {
+        std::size_t AddComdatExternal( Omf::NameIndex const logicalNameIdx ) {
             _externals.push_back( ResolveNameRaw( logicalNameIdx ) );
             return _externals.size( );
         }
@@ -81,15 +81,15 @@ namespace {
             }
         }
 
-        std::optional<Omf::OmfFixuppRecord::ThreadSubrecord> GetTargetThread( std::uint8_t num ) const {
+        std::optional<Omf::OmfFixuppRecord::ThreadSubrecord> GetTargetThread( std::uint8_t const num ) const {
             return _targetThreads[num & 0x03u];
         }
 
-        std::optional<Omf::OmfFixuppRecord::ThreadSubrecord> GetFrameThread( std::uint8_t num ) const {
+        std::optional<Omf::OmfFixuppRecord::ThreadSubrecord> GetFrameThread( std::uint8_t const num ) const {
             return _frameThreads[num & 0x03u];
         }
 
-        std::string ResolveNameRaw( Omf::NameIndex idx ) const {
+        std::string ResolveNameRaw( Omf::NameIndex const idx ) const {
             if ( !idx.IsValid( ) ) {
                 return "";
             }
@@ -99,14 +99,14 @@ namespace {
             return "<out-of-range>";
         }
 
-        std::string FormatNameIndex( Omf::NameIndex idx ) const {
+        std::string FormatNameIndex( Omf::NameIndex const idx ) const {
             if ( !idx.IsValid( ) ) {
                 return "0 (none)";
             }
             return std::format( "#{} (\"{}\")", idx.value, ResolveNameRaw( idx ) );
         }
 
-        std::string FormatSegmentIndex( Omf::SegmentIndex idx ) const {
+        std::string FormatSegmentIndex( Omf::SegmentIndex const idx ) const {
             if ( !idx.IsValid( ) ) {
                 return "0 (none)";
             }
@@ -116,7 +116,7 @@ namespace {
             return std::format( "#{} (<unresolved segment>)", idx.value );
         }
 
-        std::string FormatGroupIndex( Omf::GroupIndex idx ) const {
+        std::string FormatGroupIndex( Omf::GroupIndex const idx ) const {
             if ( !idx.IsValid( ) ) {
                 return "0 (none)";
             }
@@ -126,7 +126,7 @@ namespace {
             return std::format( "#{} (<unresolved group>)", idx.value );
         }
 
-        std::string FormatExternalIndex( Omf::ExternalIndex idx ) const {
+        std::string FormatExternalIndex( Omf::ExternalIndex const idx ) const {
             if ( !idx.IsValid( ) ) {
                 return "0 (none)";
             }
@@ -151,7 +151,7 @@ namespace {
     // Formatting helpers
     //=========================================================================
 
-    bool IsPrintable( std::span<std::byte const> bytes ) {
+    bool IsPrintable( std::span<std::byte const> const bytes ) {
         for ( std::byte const b : bytes ) {
             unsigned char const c { std::to_integer<unsigned char>( b ) };
             if ( ( ( c < 0x20u ) || ( c > 0x7Eu ) ) && ( c != '\t' ) && ( c != '\r' ) && ( c != '\n' ) ) {
@@ -161,23 +161,23 @@ namespace {
         return true;
     }
 
-    std::string Hex8( std::uint8_t val ) {
+    std::string Hex8( std::uint8_t const val ) {
         return std::format( "0x{:02X}", static_cast<unsigned>( val ) );
     }
 
-    std::string Hex16( std::uint16_t val ) {
+    std::string Hex16( std::uint16_t const val ) {
         return std::format( "0x{:04X}", static_cast<unsigned>( val ) );
     }
 
-    std::string Hex32( std::uint32_t val ) {
+    std::string Hex32( std::uint32_t const val ) {
         return std::format( "0x{:08X}", val );
     }
 
-    std::string HexOffset( std::uint32_t val, bool is32Bit ) {
+    std::string HexOffset( std::uint32_t const val, bool const is32Bit ) {
         return is32Bit ? Hex32( val ) : Hex16( static_cast<std::uint16_t>( val ) );
     }
 
-    std::string_view GetRecordTypeName( Omf::RecordType type ) noexcept {
+    std::string_view GetRecordTypeName( Omf::RecordType const type ) noexcept {
         using Omf::RecordType;
         switch ( type ) {
             case RecordType::Rheadr:      return "RHEADR";
@@ -245,7 +245,7 @@ namespace {
         }
     }
 
-    std::string_view GetComentClassDescription( std::uint8_t cls ) noexcept {
+    std::string_view GetComentClassDescription( std::uint8_t const cls ) noexcept {
         switch ( cls ) {
             case 0x00: return "Translator / Compiler Identification";
             case 0x01: return "Intel Copyright Notice";
@@ -274,7 +274,7 @@ namespace {
         }
     }
 
-    std::string_view GetAlignmentName( Omf::OmfSegdefRecord::Alignment align ) noexcept {
+    std::string_view GetAlignmentName( Omf::OmfSegdefRecord::Alignment const align ) noexcept {
         using Alignment = Omf::OmfSegdefRecord::Alignment;
         switch ( align ) {
             case Alignment::Absolute:             return "Absolute (A=0)";
@@ -288,7 +288,7 @@ namespace {
         }
     }
 
-    std::string_view GetCombinationName( Omf::OmfSegdefRecord::Combination comb ) noexcept {
+    std::string_view GetCombinationName( Omf::OmfSegdefRecord::Combination const comb ) noexcept {
         using Combination = Omf::OmfSegdefRecord::Combination;
         switch ( comb ) {
             case Combination::Private: return "Private (C=0)";
@@ -301,7 +301,7 @@ namespace {
         }
     }
 
-    std::string_view GetFixupLocationName( Omf::FixupLocationType loc ) noexcept {
+    std::string_view GetFixupLocationName( Omf::FixupLocationType const loc ) noexcept {
         using Omf::FixupLocationType;
         switch ( loc ) {
             case FixupLocationType::LowByte:          return "LowByte (8-bit lobyte, loc=0)";
@@ -317,7 +317,7 @@ namespace {
         }
     }
 
-    std::string FormatFrameMethod( std::uint8_t method, std::uint16_t datum, ModuleContext const& ctx ) {
+    std::string FormatFrameMethod( std::uint8_t const method, std::uint16_t const datum, ModuleContext const& ctx ) {
         switch ( method & 0x07u ) {
             case 0:  return "F0: Segment "  + ctx.FormatSegmentIndex( Omf::SegmentIndex{ datum } );
             case 1:  return "F1: Group "    + ctx.FormatGroupIndex( Omf::GroupIndex{ datum } );
@@ -329,7 +329,7 @@ namespace {
         }
     }
 
-    std::string FormatTargetMethod( std::uint8_t method, std::uint16_t datum, ModuleContext const& ctx ) {
+    std::string FormatTargetMethod( std::uint8_t const method, std::uint16_t const datum, ModuleContext const& ctx ) {
         switch ( method & 0x03u ) {
             case 0:  return std::format( "T{}: Segment {}",        method, ctx.FormatSegmentIndex( Omf::SegmentIndex{ datum } ) );
             case 1:  return std::format( "T{}: Group {}",          method, ctx.FormatGroupIndex( Omf::GroupIndex{ datum } ) );
@@ -339,12 +339,7 @@ namespace {
         }
     }
 
-    void PrintFixupTargetSpec(
-        Omf::FixupTargetSpec const& spec,
-        bool                        is32Bit,
-        ModuleContext const&        ctx,
-        std::string_view            indent
-    ) {
+    void PrintFixupTargetSpec( Omf::FixupTargetSpec const& spec, bool const is32Bit, ModuleContext const& ctx, std::string_view const indent ) {
         std::cout << indent << "Frame  : ";
         if ( spec.frameUsesThread ) {
             std::uint8_t const tNum { static_cast<std::uint8_t>( spec.frameMethodOrThread & 0x03u ) };
@@ -376,7 +371,7 @@ namespace {
         }
     }
 
-    void PrintHexDump( std::span<std::byte const> data, std::uint32_t startOffset = 0, std::string_view indent = "      " ) {
+    void PrintHexDump( std::span<std::byte const> const data, std::uint32_t const startOffset = 0, std::string_view const indent = "      " ) {
         if ( data.empty( ) ) {
             std::cout << indent << "<empty data>\n";
             return;

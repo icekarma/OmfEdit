@@ -20,14 +20,10 @@ namespace {
     //   "C:\\PROJ\\SRC\\VIDEO\\VIDEO.C" -> "video"
     //   "src\\mthread\\mthread.asm"     -> "mthread"
     //   "MOUSE"                         -> "mouse"
-    std::string SanitizeModuleStem( std::string_view rawModuleName, std::size_t fallbackIndex, bool preserveCase ) {
+    std::string SanitizeModuleStem( std::string_view const rawModuleName, std::size_t const fallbackIndex, bool const preserveCase ) {
         // 1. Strip drive prefix (e.g., "C:") and directory separators ('\' or '/')
         std::size_t const lastSlash { rawModuleName.find_last_of( "\\/:" ) };
-        std::string_view  baseName  {
-            ( lastSlash == std::string_view::npos )
-                ? rawModuleName
-                : rawModuleName.substr( lastSlash + 1u )
-        };
+        std::string_view  baseName  { ( lastSlash == std::string_view::npos ) ? rawModuleName : rawModuleName.substr( lastSlash + 1u ) };
 
         // 2. Strip trailing extension (e.g., ".c", ".cpp", ".asm", ".obj")
         std::size_t const lastDot { baseName.find_last_of( '.' ) };
@@ -74,9 +70,9 @@ int main( int argc, char* argv[] ) {
     }
 
     std::filesystem::path inputLibPath;
-    std::filesystem::path outputDir       { "."   };
-    bool                  preserveCase    { false };
-    bool                  listOnly        { false };
+    std::filesystem::path outputDir       { "." };
+    bool                  preserveCase    { };
+    bool                  listOnly        { };
     std::size_t           positionalCount { };
 
     for ( int i { 1 }; i < argc; ++i ) {
@@ -131,12 +127,7 @@ int main( int argc, char* argv[] ) {
         // Optional: Print library header info if this is an MS-DOS .LIB (0xF0)
         if ( !libFile.GetRecords( ).empty( ) ) {
             if ( auto const* msHdr { libFile.GetRecords( ).front( )->As<Omf::OmfMsLibHeaderRecord>( ) }; msHdr ) {
-                std::cout << std::format(
-                    "Library: {} (Page Size: {} bytes, Modules: {})\n",
-                    inputLibPath.string( ),
-                    msHdr->GetPageSize( ),
-                    modules.size( )
-                );
+                std::cout << std::format( "Library: {} (Page Size: {} bytes, Modules: {})\n", inputLibPath.string( ), msHdr->GetPageSize( ), modules.size( ) );
             }
         }
 
@@ -179,21 +170,12 @@ int main( int argc, char* argv[] ) {
         }
 
         if ( !listOnly ) {
-            std::cout << std::format(
-                "Successfully extracted {} object file(s) to '{}'.\n",
-                modules.size( ),
-                outputDir.string( )
-            );
+            std::cout << std::format( "Successfully extracted {} object file(s) to '{}'.\n", modules.size( ), outputDir.string( ) );
         }
 
         return 0;
     } catch ( Omf::OmfParseException const& ex ) {
-        std::cerr << std::format(
-            "OMF Parse Error at offset 0x{:X} (record type 0x{:02X}): {}\n",
-            ex.GetFileOffset( ),
-            static_cast<unsigned>( ex.GetRecordType( ) ),
-            ex.what( )
-        );
+        std::cerr << std::format( "OMF Parse Error at offset 0x{:X} (record type 0x{:02X}): {}\n", ex.GetFileOffset( ), static_cast<unsigned>( ex.GetRecordType( ) ), ex.what( ) );
         return 3;
     } catch ( std::exception const& ex ) {
         std::cerr << std::format( "Error: {}\n", ex.what( ) );
