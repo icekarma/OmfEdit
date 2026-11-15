@@ -1029,7 +1029,7 @@ namespace {
     void PrintUsage( char const* progName ) {
         std::cerr << std::format(
             "Usage:\n"
-            "  {} <input.obj|input.lib> [options]\n\n"
+            "  {} <input.obj|input.lib>... [options]\n\n"
             "Options:\n"
             "  --raw            Hex-dump the raw interior payload bytes of every record\n"
             "  --expand-lidata  Expand repeating LIDATA blocks and hex-dump the expanded bytes\n"
@@ -1046,12 +1046,17 @@ int main( int argc, char* argv[] ) {
         return 1;
     }
 
-    std::filesystem::path inputPath;
-    DumpOptions           opts      { };
+    std::vector<std::filesystem::path> inputPaths;
+    DumpOptions                        opts        { };
 
     for ( int i { 1 }; i < argc; ++i ) {
         std::string_view const arg { argv[i] };
-        if ( arg == "--raw" ) {
+        if ( arg == "--" ) {
+            for ( int j { i + 1 }; j < argc; ++j ) {
+                inputPaths.emplace_back( argv[j] );
+            }
+            break;
+        } else if ( arg == "--raw" ) {
             opts.showRawPayload = true;
         } else if ( arg == "--expand-lidata" ) {
             opts.expandLidata = true;
@@ -1060,119 +1065,134 @@ int main( int argc, char* argv[] ) {
         } else if ( ( arg == "--help" ) || ( arg == "-h" ) || ( arg == "/h" ) || ( arg == "/?" ) ) {
             PrintUsage( argv[0] );
             return 0;
-        } else if ( inputPath.empty( ) ) {
-            inputPath = arg;
-        } else {
-            std::cerr << std::format( "Error: Unexpected argument '{}'\n\n", arg );
+        } else if ( arg.starts_with( '-' ) ) {
+            std::cerr << std::format( "Error: Unknown option '{}'\n\n", arg );
             PrintUsage( argv[0] );
             return 1;
+        } else {
+            inputPaths.emplace_back( arg );
         }
     }
 
-    if ( inputPath.empty( ) ) {
+    if ( inputPaths.empty( ) ) {
         PrintUsage( argv[0] );
         return 1;
     }
 
-    try {
-        Omf::OmfFile const omfFile { Omf::OmfFile::LoadFromFile( inputPath ) };
-        auto const         records { omfFile.GetRecords( ) };
-        auto const&        modules { omfFile.GetModules( ) };
+    int exitCode { };
 
-        std::cout << std::format(
-            "=============================================================================\n"
-            "File:        {}\n"
-            "Records:     {}\n"
-            "Modules:     {}\n"
-            "=============================================================================\n\n",
-            inputPath.string( ),
-            records.size( ),
-            modules.size( )
-        );
+    for ( std::size_t fileIdx { }, limit { inputPaths.size( ) }; fileIdx < limit; ++fileIdx ) {
+        std::filesystem::path const& inputPath { inputPaths[fileIdx] };
 
-        ModuleContext ctx;
-        std::size_t   fileOffset  { };
-        std::size_t   moduleIndex { };
+        if ( fileIdx > 0 ) {
+            std::cout << "\n";
+        }
 
-        for ( std::size_t i { }, limit { records.size( ) }; i < limit; ++i ) {
-            Omf::OmfRecord  const& rec          { *records[i]                   };
-            Omf::RecordType const  type         { rec.GetRecordType( )          };
-            std::size_t     const  payloadLen   { rec.GetRawPayload( ).size( )  };
-            std::size_t     const  recordLen    { payloadLen + 1u               };
-            std::size_t     const  totalBytes   {  recordLen + 3u               };
-            std::uint8_t    const  origChecksum { rec.GetOriginalChecksum( )    };
-            std::uint8_t    const  calcChecksum { rec.ComputeChecksum( )        };
-            bool            const  isMsLib      { ( type == Omf::RecordType::MsLibHeader ) || ( type == Omf::RecordType::MsLibEnd ) };
+        try {
+            Omf::OmfFile const omfFile { Omf::OmfFile::LoadFromFile( inputPath ) };
+            auto const         records { omfFile.GetRecords( ) };
+            auto const&        modules { omfFile.GetModules( ) };
 
             std::cout << std::format(
-                "[{:4}] {}  {:<10} ({})  Len={:5} (Payload={:5})  ",
-                i,
-                Hex32( static_cast<std::uint32_t>( fileOffset ) ),
-                GetRecordTypeName( type ),
-                Hex8( static_cast<std::uint8_t>( type ) ),
-                recordLen,
-                payloadLen
+                "=============================================================================\n"
+                "File:        {}\n"
+                "Records:     {}\n"
+                "Modules:     {}\n"
+                "=============================================================================\n\n",
+                inputPath.string( ),
+                records.size( ),
+                modules.size( )
             );
 
-            if ( isMsLib ) {
-                std::cout << std::format( "PadByte={}\n", Hex8( origChecksum ) );
-            } else if ( origChecksum == 0u ) {
-                std::cout << "Chksum=0x00 (Unchecked)\n";
-            } else if ( rec.HasValidChecksum( ) ) {
-                std::cout << std::format( "Chksum={} (OK)\n", Hex8( origChecksum ) );
-            } else {
-                std::cout << std::format( "Chksum={} (BAD: expected {})\n", Hex8( origChecksum ), Hex8( calcChecksum ) );
-            }
+            ModuleContext ctx;
+            std::size_t   fileOffset  { };
+            std::size_t   moduleIndex { };
 
-            if ( !opts.summaryOnly ) {
-                DumpRecordDetails( rec, ctx, opts );
-                std::cout << "\n";
-            }
+            for ( std::size_t i { }, limit { records.size( ) }; i < limit; ++i ) {
+                Omf::OmfRecord  const& rec          { *records[i]                   };
+                Omf::RecordType const  type         { rec.GetRecordType( )          };
+                std::size_t     const  payloadLen   { rec.GetRawPayload( ).size( )  };
+                std::size_t     const  recordLen    { payloadLen + 1u               };
+                std::size_t     const  totalBytes   {  recordLen + 3u               };
+                std::uint8_t    const  origChecksum { rec.GetOriginalChecksum( )    };
+                std::uint8_t    const  calcChecksum { rec.ComputeChecksum( )        };
+                bool            const  isMsLib      { ( type == Omf::RecordType::MsLibHeader ) || ( type == Omf::RecordType::MsLibEnd ) };
 
-            fileOffset += totalBytes;
+                std::cout << std::format(
+                    "[{:4}] {}  {:<10} ({})  Len={:5} (Payload={:5})  ",
+                    i,
+                    Hex32( static_cast<std::uint32_t>( fileOffset ) ),
+                    GetRecordTypeName( type ),
+                    Hex8( static_cast<std::uint8_t>( type ) ),
+                    recordLen,
+                    payloadLen
+                );
 
-            // Advance fileOffset past any .LIB inter-module page alignment padding
-            if ( ( ( type == Omf::RecordType::Modend ) || ( type == Omf::RecordType::Modend32 ) ) &&
-                 ( moduleIndex < modules.size( ) ) ) {
-                auto const padding { modules[moduleIndex].GetTrailingLibraryPadding( ) };
-                if ( !padding.empty( ) ) {
-                    if ( !opts.summaryOnly ) {
-                        std::cout << std::format(
-                            "       {}  <.LIB Page Alignment Padding: {} byte(s)>\n\n",
-                            Hex32( static_cast<std::uint32_t>( fileOffset ) ),
-                            padding.size( )
-                        );
-                    }
-                    fileOffset += padding.size( );
+                if ( isMsLib ) {
+                    std::cout << std::format( "PadByte={}\n", Hex8( origChecksum ) );
+                } else if ( origChecksum == 0u ) {
+                    std::cout << "Chksum=0x00 (Unchecked)\n";
+                } else if ( rec.HasValidChecksum( ) ) {
+                    std::cout << std::format( "Chksum={} (OK)\n", Hex8( origChecksum ) );
+                } else {
+                    std::cout << std::format( "Chksum={} (BAD: expected {})\n", Hex8( origChecksum ), Hex8( calcChecksum ) );
                 }
-                ++moduleIndex;
-            }
-        }
 
-        auto const trailingDict { omfFile.GetTrailingLibraryDictionary( ) };
-        if ( !trailingDict.empty( ) ) {
-            std::cout << std::format(
-                "Trailing MS-DOS .LIB Hashed Dictionary at {} ({} bytes, {} block(s))\n",
-                Hex32( static_cast<std::uint32_t>( fileOffset ) ),
-                trailingDict.size( ),
-                trailingDict.size( ) / 512u
+                if ( !opts.summaryOnly ) {
+                    DumpRecordDetails( rec, ctx, opts );
+                    std::cout << "\n";
+                }
+
+                fileOffset += totalBytes;
+
+                // Advance fileOffset past any .LIB inter-module page alignment padding
+                if ( ( ( type == Omf::RecordType::Modend ) || ( type == Omf::RecordType::Modend32 ) ) &&
+                    ( moduleIndex < modules.size( ) ) ) {
+                    auto const padding { modules[moduleIndex].GetTrailingLibraryPadding( ) };
+                    if ( !padding.empty( ) ) {
+                        if ( !opts.summaryOnly ) {
+                            std::cout << std::format(
+                                "       {}  <.LIB Page Alignment Padding: {} byte(s)>\n\n",
+                                Hex32( static_cast<std::uint32_t>( fileOffset ) ),
+                                padding.size( )
+                            );
+                        }
+                        fileOffset += padding.size( );
+                    }
+                    ++moduleIndex;
+                }
+            }
+
+            auto const trailingDict { omfFile.GetTrailingLibraryDictionary( ) };
+            if ( !trailingDict.empty( ) ) {
+                std::cout << std::format(
+                    "Trailing MS-DOS .LIB Hashed Dictionary at {} ({} bytes, {} block(s))\n",
+                    Hex32( static_cast<std::uint32_t>( fileOffset ) ),
+                    trailingDict.size( ),
+                    trailingDict.size( ) / 512u
+                );
+                if ( opts.showRawPayload && !opts.summaryOnly ) {
+                    PrintHexDump( trailingDict, static_cast<std::uint32_t>( fileOffset ), "  " );
+                }
+            }
+        } catch ( Omf::OmfParseException const& ex ) {
+            std::cerr << std::format(
+                "OMF Parse Error in '{}' at offset 0x{:X} (record type 0x{:02X}): {}\n",
+                inputPath.string( ),
+                ex.GetFileOffset( ),
+                static_cast<unsigned>( ex.GetRecordType( ) ),
+                ex.what( )
             );
-            if ( opts.showRawPayload && !opts.summaryOnly ) {
-                PrintHexDump( trailingDict, static_cast<std::uint32_t>( fileOffset ), "  " );
+            if ( exitCode == 0 ) {
+                exitCode = 2;
+            }
+        } catch ( std::exception const& ex ) {
+            std::cerr << std::format( "Error in '{}': {}\n", inputPath.string( ), ex.what( ) );
+            if ( exitCode == 0 ) {
+                exitCode = 3;
             }
         }
-
-        return 0;
-    } catch ( Omf::OmfParseException const& ex ) {
-        std::cerr << std::format(
-            "OMF Parse Error at offset 0x{:X} (record type 0x{:02X}): {}\n",
-            ex.GetFileOffset( ),
-            static_cast<unsigned>( ex.GetRecordType( ) ),
-            ex.what( )
-        );
-        return 2;
-    } catch ( std::exception const& ex ) {
-        std::cerr << std::format( "Error: {}\n", ex.what( ) );
-        return 3;
     }
+
+    return exitCode;
 }
