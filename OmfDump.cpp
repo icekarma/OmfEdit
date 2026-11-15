@@ -148,7 +148,7 @@ namespace {
     };
 
     //=========================================================================
-    // Formatting Helpers
+    // Formatting helpers
     //=========================================================================
 
     bool IsPrintable( std::span<std::byte const> bytes ) {
@@ -412,18 +412,18 @@ namespace {
             auto const& block { blocks[i] };
             if ( std::holds_alternative<std::vector<std::byte>>( block.content ) ) {
                 auto const& bytes { std::get<std::vector<std::byte>>( block.content ) };
-                std::cout << indent << std::format( "Block [{}]: Repeat={}, Leaf Bytes ({} bytes):\n", i, block.repeatCount, bytes.size( ) );
+                std::cout << indent << std::format( "Block [{}]: Repeat={}, leaf bytes ({} bytes):\n", i, block.repeatCount, bytes.size( ) );
                 PrintHexDump( bytes, 0, newIndent );
             } else {
                 auto const& nested { std::get<std::vector<Omf::OmfLidataRecord::IteratedDataBlock>>( block.content ) };
-                std::cout << indent << std::format( "Block [{}]: Repeat={}, Nested Blocks ({}):\n", i, block.repeatCount, nested.size( ) );
+                std::cout << indent << std::format( "Block [{}]: Repeat={}, nested blocks ({}):\n", i, block.repeatCount, nested.size( ) );
                 PrintIteratedDataBlocks( nested, newIndent );
             }
         }
     }
 
     //=========================================================================
-    // Per-Record Verbose Printer
+    // Per-record verbose printer
     //=========================================================================
 
     void DumpRecordDetails( Omf::OmfRecord const& rec, ModuleContext& ctx, DumpOptions const& opts ) {
@@ -432,16 +432,16 @@ namespace {
         if ( auto const* hdr { rec.As<Omf::OmfHeaderRecord>( ) }; hdr ) {
             ctx.Reset( );
             std::cout << std::format(
-                "    Header Kind : {}\n"
-                "    Module Name : \"{}\"\n",
+                "    Header kind : {}\n"
+                "    Module name : \"{}\"\n",
                 hdr->IsLibraryHeader( ) ? "LHEADR (Library Module)" : "THEADR (Translator Module)",
                 hdr->GetModuleName( )
             );
         } else if ( auto const* rhdr { rec.As<Omf::OmfRheadrRecord>( ) }; rhdr ) {
             ctx.Reset( );
             std::cout << std::format(
-                "    Module Name : \"{}\"\n"
-                "    Module Type : {}\n",
+                "    Module name : \"{}\"\n"
+                "    Module type : {}\n",
                 rhdr->GetModuleName( ),
                 Hex8( rhdr->GetModuleType( ) )
             );
@@ -466,14 +466,14 @@ namespace {
                 std::cout << std::format( "    Text        : \"{}\"\n", text );
             }
             if ( !data.empty( ) ) {
-                std::cout << std::format( "    Data Bytes  : {} byte(s)\n", data.size( ) );
+                std::cout << std::format( "    Data bytes  : {} byte(s)\n", data.size( ) );
                 PrintHexDump( data, 0, "      " );
             }
         } else if ( auto const* lnames { rec.As<Omf::OmfLnamesRecord>( ) }; lnames ) {
             auto const& names { lnames->GetNames( ) };
             std::cout << std::format(
                 "    Scope       : {}\n"
-                "    Name Count  : {}\n",
+                "    Name count  : {}\n",
                 ( lnames->IsLocal( ) ? "LLNAMES (Local)" : "LNAMES (Global)" ),
                 names.size( )
             );
@@ -485,13 +485,13 @@ namespace {
             std::size_t const segNumber { ctx.AddSegment( seg->GetSegmentNameIndex( ), seg->GetClassNameIndex( ) ) };
             std::cout << std::format(
                 "    Segment #   : {}\n"
-                "    Segment Name: {}\n"
-                "    Class Name  : {}\n"
-                "    Overlay Name: {}\n"
+                "    Segment name: {}\n"
+                "    Class name  : {}\n"
+                "    Overlay name: {}\n"
                 "    Alignment   : {}\n"
                 "    Combination : {}\n"
                 "    Attributes  : Big/MaxLength={}, Use32={}\n"
-                "    Seg Length  : {} ({})\n",
+                "    Seg length  : {} ({})\n",
                 segNumber,
                 ctx.FormatNameIndex( seg->GetSegmentNameIndex( ) ),
                 ctx.FormatNameIndex( seg->  GetClassNameIndex( ) ),
@@ -505,7 +505,7 @@ namespace {
             );
             if ( seg->GetAlignment( ) == Omf::OmfSegdefRecord::Alignment::Absolute ) {
                 std::cout << std::format(
-                    "    Abs Address : Frame={}, Offset={}\n",
+                    "    Abs address : Frame={}, Offset={}\n",
                     Hex16( seg->GetAbsoluteFrame( ).value_or( 0 ) ),
                     Hex8( seg->GetAbsoluteOffset( ).value_or( 0 ) )
                 );
@@ -515,7 +515,7 @@ namespace {
             auto const&       comps     { grp->GetComponents( )                     };
             std::cout << std::format(
                 "    Group #     : {}\n"
-                "    Group Name  : {}\n"
+                "    Group name  : {}\n"
                 "    Components  : {}\n",
                 grpNumber,
                 ctx.FormatNameIndex( grp->GetGroupNameIndex( ) ),
@@ -533,16 +533,16 @@ namespace {
             auto const& syms { pub->GetSymbols( ) };
             std::cout << std::format(
                 "    Visibility  : {}\n"
-                "    Base Group  : {}\n"
-                "    Base Segment: {}\n",
+                "    Base group  : {}\n"
+                "    Base segment: {}\n",
                 pub->IsLocal( ) ? "Local (LPUBDEF)" : "Public (PUBDEF)",
                 ctx.FormatGroupIndex( pub->GetBaseGroup( ) ),
                 ctx.FormatSegmentIndex( pub->GetBaseSegment( ) )
             );
             if ( pub->GetBaseFrame( ).has_value( ) ) {
-                std::cout << std::format( "    Base Frame  : {}\n", Hex16( *pub->GetBaseFrame( ) ) );
+                std::cout << std::format( "    Base frame  : {}\n", Hex16( *pub->GetBaseFrame( ) ) );
             }
-            std::cout << std::format( "    Symbol Count: {}\n", syms.size( ) );
+            std::cout << std::format( "    Symbol count: {}\n", syms.size( ) );
             for ( std::size_t i { }, limit { syms.size( ) }; i < limit; ++i ) {
                 std::cout << std::format(
                     "      [{:3}] Offset={}, Type=#{}, Name=\"{}\"\n",
@@ -556,7 +556,7 @@ namespace {
             auto const& syms { ext->GetSymbols( ) };
             std::cout << std::format(
                 "    Visibility  : {}\n"
-                "    Symbol Count: {}\n",
+                "    Symbol count: {}\n",
                 ext->IsLocal( ) ? "Local (LEXTDEF)" : "Global (EXTDEF)",
                 syms.size( )
             );
@@ -583,7 +583,7 @@ namespace {
             }
         } else if ( auto const* typ { rec.As<Omf::OmfTypdefRecord>( ) }; typ ) {
             std::cout << std::format(
-                "    Type Name   : \"{}\"\n"
+                "    Type name   : \"{}\"\n"
                 "    Descriptor  : {} byte(s)\n",
                 typ->GetTypeName( ),
                 typ->GetRawTypeDescriptor( ).size( )
@@ -592,15 +592,15 @@ namespace {
         } else if ( auto const* loc { rec.As<Omf::OmfLocsymRecord>( ) }; loc ) {
             auto const& syms { loc->GetSymbols( ) };
             std::cout << std::format(
-                "    Base Group  : {}\n"
-                "    Base Segment: {}\n",
+                "    Base group  : {}\n"
+                "    Base segment: {}\n",
                 ctx.FormatGroupIndex( loc->GetBaseGroup( ) ),
                 ctx.FormatSegmentIndex( loc->GetBaseSegment( ) )
             );
             if ( loc->GetBaseFrame( ).has_value( ) ) {
-                std::cout << std::format( "    Base Frame  : {}\n", Hex16( *loc->GetBaseFrame( ) ) );
+                std::cout << std::format( "    Base frame  : {}\n", Hex16( *loc->GetBaseFrame( ) ) );
             }
-            std::cout << std::format( "    Symbol Count: {}\n", syms.size( ) );
+            std::cout << std::format( "    Symbol count: {}\n", syms.size( ) );
             for ( std::size_t i { }, limit { syms.size( ) }; i < limit; ++i ) {
                 std::cout << std::format(
                     "      [{:3}] Offset={}, Type=#{}, Name=\"{}\"\n",
@@ -613,9 +613,9 @@ namespace {
         } else if ( auto const* lin { rec.As<Omf::OmfLinnumRecord>( ) }; lin ) {
             auto const& entries { lin->GetEntries( ) };
             std::cout << std::format(
-                "    Base Group  : {}\n"
-                "    Base Segment: {}\n"
-                "    Line Entries: {}\n",
+                "    Base group  : {}\n"
+                "    Base segment: {}\n"
+                "    Line entries: {}\n",
                 ctx.FormatGroupIndex( lin->GetBaseGroup( ) ),
                 ctx.FormatSegmentIndex( lin->GetBaseSegment( ) ),
                 entries.size( )
@@ -632,8 +632,8 @@ namespace {
             auto const& entries { linsym->GetEntries( ) };
             std::cout << std::format(
                 "    Flags       : {} ({})\n"
-                "    Symbol Name : {}\n"
-                "    Line Entries: {}\n",
+                "    Symbol name : {}\n"
+                "    Line entries: {}\n",
                 Hex8( linsym->GetFlags( ) ),
                 linsym->IsContinuation( ) ? "Continuation" : "First/Primary",
                 ctx.FormatNameIndex( linsym->GetSymbolNameIndex( ) ),
@@ -651,8 +651,8 @@ namespace {
             auto const data { ledata->GetData( ) };
             std::cout << std::format(
                 "    Segment     : {}\n"
-                "    Data Offset : {}\n"
-                "    Data Length : {} byte(s)\n",
+                "    Data offset : {}\n"
+                "    Data length : {} byte(s)\n",
                 ctx.FormatSegmentIndex( ledata->GetSegmentIndex( ) ),
                 HexOffset( ledata->GetDataOffset( ), is32 ),
                 data.size( )
@@ -661,8 +661,8 @@ namespace {
         } else if ( auto const* lidata { rec.As<Omf::OmfLidataRecord>( ) }; lidata ) {
             std::cout << std::format(
                 "    Segment     : {}\n"
-                "    Data Offset : {}\n"
-                "    Top Blocks  : {}\n",
+                "    Data offset : {}\n"
+                "    Top blocks  : {}\n",
                 ctx.FormatSegmentIndex( lidata->GetSegmentIndex( ) ),
                 HexOffset( lidata->GetDataOffset( ), is32 ),
                 lidata->GetBlocks( ).size( )
@@ -708,7 +708,7 @@ namespace {
             auto const& syms { comdef->GetSymbols( ) };
             std::cout << std::format(
                 "    Visibility  : {}\n"
-                "    Symbol Count: {}\n",
+                "    Symbol count: {}\n",
                 comdef->IsLocal( ) ? "Local (LCOMDEF)" : "Global (COMDEF)",
                 syms.size( )
             );
@@ -737,13 +737,13 @@ namespace {
             }
         } else if ( auto const* comdat { rec.As<Omf::OmfComdatRecord>( ) }; comdat ) {
             std::cout << std::format(
-                "    Symbol Name : {}\n"
+                "    Symbol name : {}\n"
                 "    Flags       : {} [Continuation={}, Iterated={}, Local={}, CodeSeg={}]\n"
                 "    Selection   : {}\n"
                 "    Allocation  : {}\n"
                 "    Alignment   : {}\n"
-                "    Data Offset : {}\n"
-                "    Type Index  : #{}\n",
+                "    Data offset : {}\n"
+                "    Type index  : #{}\n",
                 ctx.FormatNameIndex( comdat->GetPublicNameIndex( ) ),
                 Hex8( comdat->GetFlags( ) ),
                 comdat->IsContinuation( )    ? "yes" : "no",
@@ -759,24 +759,24 @@ namespace {
 
             if ( comdat->GetAllocationType( ) == Omf::OmfComdatRecord::AllocationType::Explicit ) {
                 std::cout << std::format(
-                    "    Base Group  : {}\n"
-                    "    Base Segment: {}\n",
+                    "    Base group  : {}\n"
+                    "    Base segment: {}\n",
                     ctx.FormatGroupIndex( comdat->GetPublicBaseGroup( ) ),
                     ctx.FormatSegmentIndex( comdat->GetPublicBaseSegment( ) )
                 );
                 if ( comdat->GetPublicBaseFrame( ).has_value( ) ) {
-                    std::cout << std::format( "    Base Frame  : {}\n", Hex16( *comdat->GetPublicBaseFrame( ) ) );
+                    std::cout << std::format( "    Base frame  : {}\n", Hex16( *comdat->GetPublicBaseFrame( ) ) );
                 }
             }
 
             auto const& payload { comdat->GetDataPayload( ) };
             if ( std::holds_alternative<std::vector<std::byte>>( payload ) ) {
                 auto const& bytes { std::get<std::vector<std::byte>>( payload ) };
-                std::cout << std::format( "    Data Bytes  : {} byte(s)\n", bytes.size( ) );
+                std::cout << std::format( "    Data bytes  : {} byte(s)\n", bytes.size( ) );
                 PrintHexDump( bytes, comdat->GetDataOffset( ), "      " );
             } else {
                 auto const& blocks { std::get<std::vector<Omf::OmfLidataRecord::IteratedDataBlock>>( payload ) };
-                std::cout << std::format( "    Iterated Blk: {}\n", blocks.size( ) );
+                std::cout << std::format( "    Iterated blk: {}\n", blocks.size( ) );
                 PrintIteratedDataBlocks( blocks, "      " );
             }
         } else if ( auto const* bakpat { rec.As<Omf::OmfBakpatRecord>( ) }; bakpat ) {
@@ -784,7 +784,7 @@ namespace {
             std::cout << std::format(
                 "    Segment     : {}\n"
                 "    Location    : {}\n"
-                "    Patch Count : {}\n",
+                "    Patch count : {}\n",
                 ctx.FormatSegmentIndex( bakpat->GetSegmentIndex( ) ),
                 GetFixupLocationName( bakpat->GetLocationType( ) ),
                 entries.size( )
@@ -800,9 +800,9 @@ namespace {
         } else if ( auto const* nbkpat { rec.As<Omf::OmfNbkpatRecord>( ) }; nbkpat ) {
             auto const& entries { nbkpat->GetEntries( ) };
             std::cout << std::format(
-                "    COMDAT Name : {}\n"
+                "    COMDAT name : {}\n"
                 "    Location    : {}\n"
-                "    Patch Count : {}\n",
+                "    Patch count : {}\n",
                 ctx.FormatNameIndex( nbkpat->GetPublicNameIndex( ) ),
                 GetFixupLocationName( nbkpat->GetLocationType( ) ),
                 entries.size( )
@@ -817,7 +817,7 @@ namespace {
             }
         } else if ( auto const* alias { rec.As<Omf::OmfAliasRecord>( ) }; alias ) {
             auto const& aliases { alias->GetAliases( ) };
-            std::cout << std::format( "    Alias Count : {}\n", aliases.size( ) );
+            std::cout << std::format( "    Alias count : {}\n", aliases.size( ) );
             for ( std::size_t i { }, limit { aliases.size( ) }; i < limit; ++i ) {
                 std::cout << std::format(
                     "      [{}] \"{}\" -> \"{}\"\n",
@@ -827,31 +827,31 @@ namespace {
                 );
             }
         } else if ( auto const* vernum { rec.As<Omf::OmfVernumRecord>( ) }; vernum ) {
-            std::cout << std::format( "    OMF Version : \"{}\"\n", vernum->GetVersion( ) );
+            std::cout << std::format( "    OMF version : \"{}\"\n", vernum->GetVersion( ) );
         } else if ( auto const* vendext { rec.As<Omf::OmfVendextRecord>( ) }; vendext ) {
             std::cout << std::format(
                 "    Subtype     : {}\n"
-                "    Ext Data    : {} byte(s)\n",
+                "    Ext data    : {} byte(s)\n",
                 Hex16( vendext->GetSubtype( ) ),
                 vendext->GetExtensionData( ).size( )
             );
             PrintHexDump( vendext->GetExtensionData( ), 0, "      " );
         } else if ( auto const* modend { rec.As<Omf::OmfModendRecord>( ) }; modend ) {
             std::cout << std::format(
-                "    Main Module : {}\n"
-                "    Has Start   : {}\n",
+                "    Main module : {}\n"
+                "    Has start   : {}\n",
                 modend->IsMainModule( )     ? "true" : "false",
                 modend->HasStartAddress( )  ? "true" : "false"
             );
             if ( modend->HasStartAddress( ) ) {
                 auto const& start { modend->GetStartAddress( ) };
                 if ( std::holds_alternative<Omf::FixupTargetSpec>( start ) ) {
-                    std::cout << "    Start Kind  : Relocatable Entry Point\n";
+                    std::cout << "    Start kind  : Relocatable Entry Point\n";
                     PrintFixupTargetSpec( std::get<Omf::FixupTargetSpec>( start ), is32, ctx, "      " );
                 } else if ( std::holds_alternative<Omf::OmfModendRecord::AbsoluteStartAddress>( start ) ) {
                     auto const& absAddr { std::get<Omf::OmfModendRecord::AbsoluteStartAddress>( start ) };
                     std::cout << std::format(
-                        "    Start Kind  : Physical / Absolute Entry Point\n"
+                        "    Start kind  : Physical / Absolute Entry Point\n"
                         "      Frame     : {}\n"
                         "      Offset    : {}\n",
                         Hex16( absAddr.frameNumber ),
@@ -861,7 +861,7 @@ namespace {
             }
         } else if ( auto const* regint { rec.As<Omf::OmfRegintRecord>( ) }; regint ) {
             auto const& entries { regint->GetEntries( ) };
-            std::cout << std::format( "    Reg Entries : {}\n", entries.size( ) );
+            std::cout << std::format( "    Reg entries : {}\n", entries.size( ) );
             for ( std::size_t i { }, limit { entries.size( ) }; i < limit; ++i ) {
                 char const* regName { "Unknown" };
                 switch ( entries[i].registerId ) {
@@ -889,17 +889,17 @@ namespace {
                 }
             }
         } else if ( auto const* redata { rec.As<Omf::OmfRedataRecord>( ) }; redata ) {
-            std::cout << "    Base Spec   :\n";
+            std::cout << "    Base spec   :\n";
             PrintFixupTargetSpec( redata->GetBaseSpec( ), false, ctx, "      " );
-            std::cout << std::format( "    Data Bytes  : {} byte(s)\n", redata->GetData( ).size( ) );
+            std::cout << std::format( "    Data bytes  : {} byte(s)\n", redata->GetData( ).size( ) );
             PrintHexDump( redata->GetData( ), 0, "      " );
         } else if ( auto const* ridata { rec.As<Omf::OmfRidataRecord>( ) }; ridata ) {
-            std::cout << "    Base Spec   :\n";
+            std::cout << "    Base spec   :\n";
             PrintFixupTargetSpec( ridata->GetBaseSpec( ), false, ctx, "      " );
             PrintIteratedDataBlocks( ridata->GetBlocks( ), "      " );
         } else if ( auto const* ovldef { rec.As<Omf::OmfOvldefRecord>( ) }; ovldef ) {
             std::cout << std::format(
-                "    Overlay Name: \"{}\"\n"
+                "    Overlay name: \"{}\"\n"
                 "    Location    : Block={}, ByteOffset={}\n"
                 "    Attributes  : {}, SharedIdx=#{}, AdjacentIdx=#{}\n",
                 ovldef->GetOverlayName( ),
@@ -911,18 +911,18 @@ namespace {
             );
         } else if ( auto const* endrec { rec.As<Omf::OmfEndrecRecord>( ) }; endrec ) {
             std::cout << std::format(
-                "    End Type    : {}\n",
+                "    End type    : {}\n",
                 endrec->GetEndType( ) == Omf::OmfEndrecRecord::EndType::Overlay ? "Overlay" : "Block"
             );
         } else if ( auto const* blkdef { rec.As<Omf::OmfBlkdefRecord>( ) }; blkdef ) {
             std::cout << std::format(
-                "    Block Name  : \"{}\"\n"
-                "    Base Group  : {}\n"
-                "    Base Segment: {}\n"
-                "    Block Offset: {}\n"
-                "    Block Length: {}\n"
-                "    Proc Flags  : {}\n"
-                "    Type Index  : #{}\n",
+                "    Block name  : \"{}\"\n"
+                "    Base group  : {}\n"
+                "    Base segment: {}\n"
+                "    Block offset: {}\n"
+                "    Block length: {}\n"
+                "    Proc flags  : {}\n"
+                "    Type index  : #{}\n",
                 blkdef->GetBlockName( ),
                 ctx.FormatGroupIndex( blkdef->GetBaseGroup( ) ),
                 ctx.FormatSegmentIndex( blkdef->GetBaseSegment( ) ),
@@ -935,9 +935,9 @@ namespace {
             std::cout << "    <Block End>\n";
         } else if ( auto const* debsym { rec.As<Omf::OmfDebsymRecord>( ) }; debsym ) {
             auto const& syms { debsym->GetSymbols( ) };
-            std::cout << std::format( "    Frame Method: {}\n", Hex8( debsym->GetFrameMethod( ) ) );
+            std::cout << std::format( "    Frame method: {}\n", Hex8( debsym->GetFrameMethod( ) ) );
             PrintFixupTargetSpec( debsym->GetBaseSpec( ), false, ctx, "      " );
-            std::cout << std::format( "    Symbol Count: {}\n", syms.size( ) );
+            std::cout << std::format( "    Symbol count: {}\n", syms.size( ) );
             for ( std::size_t i { }, limit { syms.size( ) }; i < limit; ++i ) {
                 std::cout << std::format(
                     "      [{:3}] Offset={}, Type=#{}, Name=\"{}\"\n",
@@ -949,9 +949,9 @@ namespace {
             }
         } else if ( auto const* pedata { rec.As<Omf::OmfPedataRecord>( ) }; pedata ) {
             std::cout << std::format(
-                "    Frame Number: {}\n"
+                "    Frame number: {}\n"
                 "    Offset      : {}\n"
-                "    Data Bytes  : {} byte(s)\n",
+                "    Data bytes  : {} byte(s)\n",
                 Hex16( pedata->GetFrameNumber( ) ),
                 Hex8( pedata->GetOffset( ) ),
                 pedata->GetData( ).size( )
@@ -959,7 +959,7 @@ namespace {
             PrintHexDump( pedata->GetData( ), pedata->GetOffset( ), "      " );
         } else if ( auto const* pidata { rec.As<Omf::OmfPidataRecord>( ) }; pidata ) {
             std::cout << std::format(
-                "    Frame Number: {}\n"
+                "    Frame number: {}\n"
                 "    Offset      : {}\n",
                 Hex16( pidata->GetFrameNumber( ) ),
                 Hex8( pidata->GetOffset( ) )
@@ -967,7 +967,7 @@ namespace {
             PrintIteratedDataBlocks( pidata->GetBlocks( ), "      " );
         } else if ( auto const* libhed { rec.As<Omf::OmfLibhedRecord>( ) }; libhed ) {
             std::cout << std::format(
-                "    Module Count: {}\n"
+                "    Module count: {}\n"
                 "    Dictionary  : Block={}, ByteOffset={}\n"
                 "    Flags       : {}\n",
                 libhed->GetModuleCount( ),
@@ -977,7 +977,7 @@ namespace {
             );
         } else if ( auto const* libnam { rec.As<Omf::OmfLibnamRecord>( ) }; libnam ) {
             auto const& names { libnam->GetModuleNames( ) };
-            std::cout << std::format( "    Module Names: {}\n", names.size( ) );
+            std::cout << std::format( "    Module names: {}\n", names.size( ) );
             for ( std::size_t i { }, limit { names.size( ) }; i < limit; ++i ) {
                 std::cout << std::format( "      [{:3}] \"{}\"\n", i, names[i] );
             }
@@ -994,7 +994,7 @@ namespace {
             }
         } else if ( auto const* libdic { rec.As<Omf::OmfLibdicRecord>( ) }; libdic ) {
             auto const& groups { libdic->GetModulePublicGroups( ) };
-            std::cout << std::format( "    Module Grps : {}\n", groups.size( ) );
+            std::cout << std::format( "    Module groups : {}\n", groups.size( ) );
             for ( std::size_t g { }, limit { groups.size( ) }; g < limit; ++g ) {
                 std::cout << std::format( "      Module [{}] ({} symbol(s)):\n", g, groups[g].size( ) );
                 for ( auto const& sym : groups[g] ) {
@@ -1003,26 +1003,26 @@ namespace {
             }
         } else if ( auto const* mshdr { rec.As<Omf::OmfMsLibHeaderRecord>( ) }; mshdr ) {
             std::cout << std::format(
-                "    Page Size   : {} bytes\n"
-                "    Dict Offset : {} ({})\n"
-                "    Dict Blocks : {} (512-byte blocks)\n"
+                "    Page size   : {} bytes\n"
+                "    Dict offset : {} ({})\n"
+                "    Dict blocks : {} (512-byte blocks)\n"
                 "    Flags       : {} ({})\n",
                 mshdr->GetPageSize( ),
                 Hex32( mshdr->GetDictionaryFileOffset( ) ),
                 mshdr->GetDictionaryFileOffset( ),
                 mshdr->GetDictionaryBlockCount( ),
                 Hex8( mshdr->GetFlags( ) ),
-                mshdr->IsCaseSensitive( ) ? "Case-Sensitive" : "Case-Insensitive"
+                mshdr->IsCaseSensitive( ) ? "case-sensitive" : "case-insensitive"
             );
         } else if ( auto const* msend { rec.As<Omf::OmfMsLibEndRecord>( ) }; msend ) {
             std::cout << std::format( "    Padding     : {} byte(s)\n", msend->GetPaddingBytes( ).size( ) );
         } else if ( auto const* unk { rec.As<Omf::OmfUnknownRecord>( ) }; unk ) {
-            std::cout << std::format( "    Unknown Rec : {} payload byte(s)\n", unk->GetRawPayload( ).size( ) );
+            std::cout << std::format( "    Unknown rec : {} payload byte(s)\n", unk->GetRawPayload( ).size( ) );
             PrintHexDump( unk->GetRawPayload( ), 0, "      " );
         }
 
         if ( opts.showRawPayload && !rec.As<Omf::OmfUnknownRecord>( ) ) {
-            std::cout << std::format( "    Raw Payload ({} bytes):\n", rec.GetRawPayload( ).size( ) );
+            std::cout << std::format( "    Raw payload ({} bytes):\n", rec.GetRawPayload( ).size( ) );
             PrintHexDump( rec.GetRawPayload( ), 0, "      " );
         }
     }
@@ -1134,7 +1134,7 @@ int main( int argc, char* argv[] ) {
                 if ( isMsLib ) {
                     std::cout << std::format( "PadByte={}\n", Hex8( origChecksum ) );
                 } else if ( origChecksum == 0u ) {
-                    std::cout << "Chksum=0x00 (Unchecked)\n";
+                    std::cout << "Chksum=0x00 (unchecked)\n";
                 } else if ( rec.HasValidChecksum( ) ) {
                     std::cout << std::format( "Chksum={} (OK)\n", Hex8( origChecksum ) );
                 } else {
@@ -1155,7 +1155,7 @@ int main( int argc, char* argv[] ) {
                     if ( !padding.empty( ) ) {
                         if ( !opts.summaryOnly ) {
                             std::cout << std::format(
-                                "[{}] {}  <.LIB Page Alignment Padding: {} byte(s)>\n\n",
+                                "[{}] {}  <.LIB page alignment padding: {} byte(s)>\n\n",
                                 ( i < 10000 ) ? "----" : "-----",
                                 Hex32( static_cast<std::uint32_t>( fileOffset ) ),
                                 padding.size( )
@@ -1170,7 +1170,7 @@ int main( int argc, char* argv[] ) {
             auto const trailingDict { omfFile.GetTrailingLibraryDictionary( ) };
             if ( !trailingDict.empty( ) ) {
                 std::cout << std::format(
-                    "Trailing MS-DOS .LIB Hashed Dictionary at {} ({} bytes, {} block(s))\n",
+                    "Trailing MS-DOS .LIB hashed dictionary at {} ({} bytes, {} block(s))\n",
                     Hex32( static_cast<std::uint32_t>( fileOffset ) ),
                     trailingDict.size( ),
                     trailingDict.size( ) / 512u
@@ -1181,7 +1181,7 @@ int main( int argc, char* argv[] ) {
             }
         } catch ( Omf::OmfParseException const& ex ) {
             std::cerr << std::format(
-                "OMF Parse Error in '{}' at offset 0x{:X} (record type 0x{:02X}): {}\n",
+                "OMF parse error in '{}' at offset 0x{:X} (record type 0x{:02X}): {}\n",
                 inputPath.string( ),
                 ex.GetFileOffset( ),
                 static_cast<unsigned>( ex.GetRecordType( ) ),
