@@ -1080,13 +1080,15 @@ int main( int argc, char* argv[] ) {
     }
 
     int exitCode { };
+    bool skipNewLine { };
 
     for ( std::size_t fileIdx { }, limit { inputPaths.size( ) }; fileIdx < limit; ++fileIdx ) {
         std::filesystem::path const& inputPath { inputPaths[fileIdx] };
 
-        if ( fileIdx > 0 ) {
+        if ( ( fileIdx > 0 ) && !skipNewLine ) {
             std::cout << "\n";
         }
+        skipNewLine = false;
 
         try {
             Omf::OmfFile const omfFile { Omf::OmfFile::LoadFromFile( inputPath ) };
@@ -1187,11 +1189,13 @@ int main( int argc, char* argv[] ) {
             if ( exitCode == 0 ) {
                 exitCode = 2;
             }
+            skipNewLine = true;
         } catch ( std::exception const& ex ) {
             std::cerr << std::format( "Error in '{}': {}\n", inputPath.string( ), ex.what( ) );
             if ( exitCode == 0 ) {
                 exitCode = 3;
             }
+            skipNewLine = true;
         }
     }
 
