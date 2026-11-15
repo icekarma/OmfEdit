@@ -1109,13 +1109,13 @@ int main( int argc, char* argv[] ) {
             std::size_t   moduleIndex { };
 
             for ( std::size_t i { }, limit { records.size( ) }; i < limit; ++i ) {
-                Omf::OmfRecord  const& rec          { *records[i]                   };
-                Omf::RecordType const  type         { rec.GetRecordType( )          };
-                std::size_t     const  payloadLen   { rec.GetRawPayload( ).size( )  };
-                std::size_t     const  recordLen    { payloadLen + 1u               };
-                std::size_t     const  totalBytes   {  recordLen + 3u               };
-                std::uint8_t    const  origChecksum { rec.GetOriginalChecksum( )    };
-                std::uint8_t    const  calcChecksum { rec.ComputeChecksum( )        };
+                Omf::OmfRecord  const& rec          { *records[i]                  };
+                Omf::RecordType const  type         { rec.GetRecordType( )         };
+                std::size_t     const  payloadLen   { rec.GetRawPayload( ).size( ) };
+                std::size_t     const  recordLen    { payloadLen + 1u              };
+                std::size_t     const  totalBytes   {  recordLen + 3u              };
+                std::uint8_t    const  origChecksum { rec.GetOriginalChecksum( )   };
+                std::uint8_t    const  calcChecksum { rec.ComputeChecksum( )       };
                 bool            const  isMsLib      { ( type == Omf::RecordType::MsLibHeader ) || ( type == Omf::RecordType::MsLibEnd ) };
 
                 std::cout << std::format(
@@ -1152,7 +1152,8 @@ int main( int argc, char* argv[] ) {
                     if ( !padding.empty( ) ) {
                         if ( !opts.summaryOnly ) {
                             std::cout << std::format(
-                                "       {}  <.LIB Page Alignment Padding: {} byte(s)>\n\n",
+                                "[{}] {}  <.LIB Page Alignment Padding: {} byte(s)>\n\n",
+                                ( i < 10000 ) ? "----" : "-----",
                                 Hex32( static_cast<std::uint32_t>( fileOffset ) ),
                                 padding.size( )
                             );
