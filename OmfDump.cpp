@@ -151,6 +151,16 @@ namespace {
     // Formatting Helpers
     //=========================================================================
 
+    bool IsPrintable( std::span<std::byte const> bytes ) {
+        for ( std::byte const b : bytes ) {
+            unsigned char const c { std::to_integer<unsigned char>( b ) };
+            if ( ( ( c < 0x20u ) || ( c > 0x7Eu ) ) && ( c != '\t' ) && ( c != '\r' ) && ( c != '\n' ) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     std::string Hex8( std::uint8_t val ) {
         return std::format( "0x{:02X}", static_cast<unsigned>( val ) );
     }
@@ -451,16 +461,7 @@ namespace {
             );
 
             // Check if the comment data is purely printable ASCII text
-            bool isPrintable { !data.empty( ) };
-            for ( std::byte const b : data ) {
-                unsigned char const c { std::to_integer<unsigned char>( b ) };
-                if ( ( ( c < 0x20u ) || ( c > 0x7Eu ) ) && ( c != '\t' ) && ( c != '\r' ) && ( c != '\n' ) ) {
-                    isPrintable = false;
-                    break;
-                }
-            }
-
-            if ( isPrintable ) {
+            if ( IsPrintable( data ) ) {
                 std::string_view const text( reinterpret_cast<char const*>( data.data( ) ), data.size( ) );
                 std::cout << std::format( "    Text        : \"{}\"\n", text );
             }
