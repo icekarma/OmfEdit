@@ -109,7 +109,7 @@ namespace Omf {
 
     public:
 
-        OmfParseException( std::string message, std::size_t fileOffset, RecordType recordType ):
+        OmfParseException( std::string const message, std::size_t const fileOffset, RecordType const recordType ):
             OmfException ( std::move( message ) ),
             _fileOffset  ( fileOffset           ),
             _recordType  ( recordType           )
@@ -133,7 +133,7 @@ namespace Omf {
 
     public:
 
-        OmfChecksumException( std::size_t fileOffset, RecordType recordType, std::uint8_t expectedChecksum, std::uint8_t actualChecksum );
+        OmfChecksumException( std::size_t const fileOffset, RecordType const recordType, std::uint8_t const expectedChecksum, std::uint8_t const actualChecksum );
 
         std::uint8_t GetExpectedChecksum( ) const noexcept { return _expectedChecksum; }
         std::uint8_t GetActualChecksum( )   const noexcept { return   _actualChecksum; }
@@ -190,7 +190,7 @@ namespace Omf {
 
         constexpr bool IsValid( ) const noexcept { return value != 0; }
 
-        auto operator<=>( OmfIndex const& ) const = default;
+        constexpr auto operator<=>( OmfIndex const& ) const noexcept = default;
 
     };
 
@@ -274,7 +274,7 @@ namespace Omf {
         std::span<std::byte const> GetRawPayload( ) const;
 
         // Serializes the complete framed OMF record: [Type:1][Length:2][Payload:N][Checksum:1]
-        std::vector<std::byte> SerializeRecord( ChecksumPolicy policy = ChecksumPolicy::PreserveOriginal ) const;
+        std::vector<std::byte> SerializeRecord( ChecksumPolicy const policy = ChecksumPolicy::PreserveOriginal ) const;
 
         std::uint8_t GetOriginalChecksum( ) const noexcept { return _originalChecksum; }
         std::uint8_t ComputeChecksum( ) const;
@@ -299,13 +299,13 @@ namespace Omf {
 
     protected:
 
-        explicit OmfRecord( RecordType type ) noexcept;
+        explicit OmfRecord( RecordType const type ) noexcept;
 
-        OmfRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         // Protected helper for derived classes that support toggling between
         // paired opcodes (e.g., THEADR/LHEADR, PUBDEF/LPUBDEF, 16-bit/32-bit)
-        void SetRecordTypeProtected( RecordType newType ) noexcept;
+        void SetRecordTypeProtected( RecordType const newType ) noexcept;
 
         // Implemented by every derived class to encode its current fields into payload bytes
         virtual std::vector<std::byte> SerializePayload( ) const = 0;
@@ -313,7 +313,7 @@ namespace Omf {
     private:
 
         void         _RebuildPayloadCacheIfNeeded( ) const;
-        std::uint8_t _ComputeChecksumForPayload( std::span<std::byte const> payload ) const noexcept;
+        std::uint8_t _ComputeChecksumForPayload( std::span<std::byte const> const payload ) const noexcept;
 
         RecordType                     _recordType;
         mutable bool                   _isDirty;
@@ -333,11 +333,11 @@ namespace Omf {
 
     public:
 
-        OmfUnknownRecord( RecordType type, std::vector<std::byte> payload );
-        OmfUnknownRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfUnknownRecord( RecordType const type, std::vector<std::byte> const payload );
+        OmfUnknownRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void SetRecordType( RecordType newType ) noexcept;
-        void SetRawPayload( std::vector<std::byte> newPayload );
+        void SetRecordType( RecordType const newType ) noexcept;
+        void SetRawPayload( std::vector<std::byte> const newPayload );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -361,14 +361,14 @@ namespace Omf {
 
     public:
 
-        explicit OmfHeaderRecord( std::string moduleName, bool isLibraryHeader = false );
-        OmfHeaderRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfHeaderRecord( std::string const moduleName, bool const isLibraryHeader = false );
+        OmfHeaderRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         bool IsLibraryHeader( ) const noexcept { return GetRecordType( ) == RecordType::Lheadr; }
-        void SetIsLibraryHeader( bool isLibraryHeader ) noexcept;
+        void SetIsLibraryHeader( bool const isLibraryHeader ) noexcept;
 
         std::string_view GetModuleName( ) const noexcept { return _moduleName; }
-        void             SetModuleName( std::string newName );
+        void             SetModuleName( std::string const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -392,20 +392,20 @@ namespace Omf {
 
     public:
 
-        OmfComentRecord( bool noPurge, bool noList, std::uint8_t commentClass, std::vector<std::byte> commentData );
-        OmfComentRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfComentRecord( bool const noPurge, bool const noList, std::uint8_t const commentClass, std::vector<std::byte> const commentData );
+        OmfComentRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         bool IsNoPurge( ) const noexcept { return _noPurge; }
-        void SetNoPurge( bool value ) noexcept;
+        void SetNoPurge( bool const value ) noexcept;
 
         bool IsNoList( ) const noexcept { return _noList; }
-        void SetNoList( bool value ) noexcept;
+        void SetNoList( bool const value ) noexcept;
 
         std::uint8_t GetCommentClass( ) const noexcept { return _commentClass; }
-        void         SetCommentClass( std::uint8_t newClass ) noexcept;
+        void         SetCommentClass( std::uint8_t const newClass ) noexcept;
 
         std::span<std::byte const> GetCommentData( ) const noexcept { return _commentData; }
-        void                       SetCommentData( std::vector<std::byte> newData );
+        void                       SetCommentData( std::vector<std::byte> const newData );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -439,13 +439,13 @@ namespace Omf {
 
         using StartAddress = std::variant<std::monostate, FixupTargetSpec, AbsoluteStartAddress>;
 
-        explicit OmfModendRecord( bool isMainModule = false, bool is32Bit = false );
-        OmfModendRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfModendRecord( bool const isMainModule = false, bool const is32Bit = false );
+        OmfModendRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void SetIs32Bit( bool is32Bit ) noexcept;
+        void SetIs32Bit( bool const is32Bit ) noexcept;
 
         bool IsMainModule( ) const noexcept { return _isMainModule; }
-        void SetIsMainModule( bool value ) noexcept;
+        void SetIsMainModule( bool const value ) noexcept;
 
         bool HasStartAddress( ) const noexcept {
             return !std::holds_alternative<std::monostate>( _startAddress );
@@ -456,7 +456,7 @@ namespace Omf {
         }
 
         StartAddress const& GetStartAddress( ) const noexcept { return _startAddress; }
-        void                SetStartAddress( StartAddress address );
+        void                SetStartAddress( StartAddress const address );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -486,21 +486,21 @@ namespace Omf {
             TypeIndex   typeIndex;
         };
 
-        explicit OmfExtdefRecord( RecordType type = RecordType::Extdef );
-        OmfExtdefRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfExtdefRecord( RecordType const type = RecordType::Extdef );
+        OmfExtdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         bool IsLocal( ) const noexcept {
             return ( GetRecordType( ) == RecordType::Lextdef ) ||
                    ( GetRecordType( ) == RecordType::Lextdef32 );
         }
 
-        void SetIsLocal( bool isLocal, bool is32Bit = false ) noexcept;
+        void SetIsLocal( bool const isLocal, bool const is32Bit = false ) noexcept;
 
         std::vector<ExternalSymbol> const& GetSymbols( ) const noexcept { return _symbols; }
-        void                               SetSymbols( std::vector<ExternalSymbol> symbols );
-        void                               SetSymbolName( std::size_t index, std::string newName );
-        void                               AddSymbol( ExternalSymbol symbol );
-        std::size_t                        RenameSymbol( std::string_view oldName, std::string_view newName );
+        void                               SetSymbols( std::vector<ExternalSymbol> const symbols );
+        void                               SetSymbolName( std::size_t const index, std::string const newName );
+        void                               AddSymbol( ExternalSymbol const symbol );
+        std::size_t                        RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -530,11 +530,11 @@ namespace Omf {
         };
 
         OmfCextdefRecord( );
-        OmfCextdefRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfCextdefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::vector<ComdatExternal> const& GetExternals( ) const noexcept { return _externals; }
-        void                               SetExternals( std::vector<ComdatExternal> externals );
-        void                               AddExternal( ComdatExternal ext );
+        void                               SetExternals( std::vector<ComdatExternal> const externals );
+        void                               AddExternal( ComdatExternal const ext );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -564,13 +564,13 @@ namespace Omf {
         };
 
         OmfTypdefRecord( );
-        OmfTypdefRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfTypdefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::string_view GetTypeName( ) const noexcept { return _typeName; }
-        void             SetTypeName( std::string name );
+        void             SetTypeName( std::string const name );
 
         std::span<std::byte const> GetRawTypeDescriptor( ) const noexcept { return _rawTypeDescriptor; }
-        void                       SetRawTypeDescriptor( std::vector<std::byte> descriptor );
+        void                       SetRawTypeDescriptor( std::vector<std::byte> const descriptor );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -601,31 +601,31 @@ namespace Omf {
             TypeIndex     typeIndex;
         };
 
-        explicit OmfPubdefRecord( RecordType type = RecordType::Pubdef );
-        OmfPubdefRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfPubdefRecord( RecordType const type = RecordType::Pubdef );
+        OmfPubdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         bool IsLocal( ) const noexcept {
             return ( GetRecordType( ) == RecordType::Lpubdef ) ||
                    ( GetRecordType( ) == RecordType::Lpubdef32 );
         }
 
-        void SetFormat( bool isLocal, bool is32Bit ) noexcept;
+        void SetFormat( bool const isLocal, bool const is32Bit ) noexcept;
 
         GroupIndex                   GetBaseGroup( ) const noexcept   { return _baseGroup;   }
-        void                         SetBaseGroup( GroupIndex group ) noexcept;
+        void                         SetBaseGroup( GroupIndex const group ) noexcept;
 
         SegmentIndex                 GetBaseSegment( ) const noexcept { return _baseSegment; }
-        void                         SetBaseSegment( SegmentIndex segment ) noexcept;
+        void                         SetBaseSegment( SegmentIndex const segment ) noexcept;
 
         std::optional<std::uint16_t> GetBaseFrame( ) const noexcept   { return _baseFrame;   }
-        void                         SetBaseFrame( std::optional<std::uint16_t> frame ) noexcept;
+        void                         SetBaseFrame( std::optional<std::uint16_t> const frame ) noexcept;
 
         std::vector<PublicSymbol> const& GetSymbols( ) const noexcept { return _symbols; }
-        void                             SetSymbols( std::vector<PublicSymbol> symbols );
-        void                             SetSymbolName( std::size_t index, std::string newName );
-        void                             SetSymbolOffset( std::size_t index, std::uint32_t newOffset ) noexcept;
-        void                             AddSymbol( PublicSymbol symbol );
-        std::size_t                      RenameSymbol( std::string_view oldName, std::string_view newName );
+        void                             SetSymbols( std::vector<PublicSymbol> const symbols );
+        void                             SetSymbolName( std::size_t const index, std::string const newName );
+        void                             SetSymbolOffset( std::size_t const index, std::uint32_t const newOffset ) noexcept;
+        void                             AddSymbol( PublicSymbol const symbol );
+        std::size_t                      RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -654,23 +654,23 @@ namespace Omf {
 
         using LocalSymbol = OmfPubdefRecord::PublicSymbol;
 
-        explicit OmfLocsymRecord( bool is32Bit = false );
-        OmfLocsymRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfLocsymRecord( bool const is32Bit = false );
+        OmfLocsymRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void SetIs32Bit( bool is32Bit ) noexcept;
+        void SetIs32Bit( bool const is32Bit ) noexcept;
 
         GroupIndex                   GetBaseGroup( ) const noexcept   { return _baseGroup;   }
-        void                         SetBaseGroup( GroupIndex group ) noexcept;
+        void                         SetBaseGroup( GroupIndex const group ) noexcept;
 
         SegmentIndex                 GetBaseSegment( ) const noexcept { return _baseSegment; }
-        void                         SetBaseSegment( SegmentIndex segment ) noexcept;
+        void                         SetBaseSegment( SegmentIndex const segment ) noexcept;
 
         std::optional<std::uint16_t> GetBaseFrame( ) const noexcept   { return _baseFrame;   }
-        void                         SetBaseFrame( std::optional<std::uint16_t> frame ) noexcept;
+        void                         SetBaseFrame( std::optional<std::uint16_t> const frame ) noexcept;
 
         std::vector<LocalSymbol> const& GetSymbols( ) const noexcept  { return _symbols;     }
-        void                            SetSymbols( std::vector<LocalSymbol> symbols );
-        std::size_t                     RenameSymbol( std::string_view oldName, std::string_view newName );
+        void                            SetSymbols( std::vector<LocalSymbol> const symbols );
+        std::size_t                     RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -702,20 +702,20 @@ namespace Omf {
             std::uint32_t offset     { };
         };
 
-        explicit OmfLinnumRecord( bool is32Bit = false );
-        OmfLinnumRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfLinnumRecord( bool const is32Bit = false );
+        OmfLinnumRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void SetIs32Bit( bool is32Bit ) noexcept;
+        void SetIs32Bit( bool const is32Bit ) noexcept;
 
         GroupIndex   GetBaseGroup( ) const noexcept   { return _baseGroup;   }
-        void         SetBaseGroup( GroupIndex group ) noexcept;
+        void         SetBaseGroup( GroupIndex const group ) noexcept;
 
         SegmentIndex GetBaseSegment( ) const noexcept { return _baseSegment; }
-        void         SetBaseSegment( SegmentIndex segment ) noexcept;
+        void         SetBaseSegment( SegmentIndex const segment ) noexcept;
 
         std::vector<LineNumberEntry> const& GetEntries( ) const noexcept { return _entries; }
-        void                                SetEntries( std::vector<LineNumberEntry> entries );
-        void                                AddEntry( LineNumberEntry entry );
+        void                                SetEntries( std::vector<LineNumberEntry> const entries );
+        void                                AddEntry( LineNumberEntry const entry );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -743,20 +743,20 @@ namespace Omf {
 
         using LineNumberEntry = OmfLinnumRecord::LineNumberEntry;
 
-        explicit OmfLinsymRecord( bool is32Bit = false );
-        OmfLinsymRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfLinsymRecord( bool const is32Bit = false );
+        OmfLinsymRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void SetIs32Bit( bool is32Bit ) noexcept;
+        void SetIs32Bit( bool const is32Bit ) noexcept;
 
         std::uint8_t GetFlags( ) const noexcept           { return _flags;                  }
-        void         SetFlags( std::uint8_t flags ) noexcept;
+        void         SetFlags( std::uint8_t const flags ) noexcept;
         bool         IsContinuation( ) const noexcept     { return ( _flags & 0x01u ) != 0; }
 
         NameIndex    GetSymbolNameIndex( ) const noexcept { return _symbolNameIndex;        }
-        void         SetSymbolNameIndex( NameIndex index ) noexcept;
+        void         SetSymbolNameIndex( NameIndex const index ) noexcept;
 
         std::vector<LineNumberEntry> const& GetEntries( ) const noexcept { return _entries; }
-        void                                SetEntries( std::vector<LineNumberEntry> entries );
+        void                                SetEntries( std::vector<LineNumberEntry> const entries );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -782,17 +782,17 @@ namespace Omf {
 
     public:
 
-        explicit OmfLnamesRecord( bool isLocal = false );
-        OmfLnamesRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfLnamesRecord( bool const isLocal = false );
+        OmfLnamesRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         bool IsLocal( ) const noexcept { return GetRecordType( ) == RecordType::Llnames; }
-        void SetIsLocal( bool isLocal ) noexcept;
+        void SetIsLocal( bool const isLocal ) noexcept;
 
         std::vector<std::string> const& GetNames( ) const noexcept { return _names; }
-        void                            SetNames( std::vector<std::string> names );
-        void                            SetName( std::size_t zeroBasedIndex, std::string newName );
-        void                            AddName( std::string name );
-        std::size_t                     Rename( std::string_view oldName, std::string_view newName );
+        void                            SetNames( std::vector<std::string> const names );
+        void                            SetName( std::size_t const zeroBasedIndex, std::string const newName );
+        void                            AddName( std::string const name );
+        std::size_t                     Rename( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -839,38 +839,38 @@ namespace Omf {
             Public7 = 7
         };
 
-        explicit OmfSegdefRecord( bool is32Bit = false );
-        OmfSegdefRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfSegdefRecord( bool const is32Bit = false );
+        OmfSegdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void          SetIs32Bit( bool is32Bit ) noexcept;
+        void          SetIs32Bit( bool const is32Bit ) noexcept;
 
         Alignment     GetAlignment( ) const noexcept        { return _alignment;        }
-        void          SetAlignment( Alignment value ) noexcept;
+        void          SetAlignment( Alignment const value ) noexcept;
 
         Combination   GetCombination( ) const noexcept      { return _combination;      }
-        void          SetCombination( Combination value ) noexcept;
+        void          SetCombination( Combination const value ) noexcept;
 
         bool          IsMaxLength( ) const noexcept         { return _isBig;            }
-        void          SetMaxLength( bool value ) noexcept;
+        void          SetMaxLength( bool const value ) noexcept;
 
         bool          IsUse32( ) const noexcept             { return _isUse32;          }
-        void          SetUse32( bool value ) noexcept;
+        void          SetUse32( bool const value ) noexcept;
 
         std::uint32_t GetSegmentLength( ) const noexcept    { return _segmentLength;    }
-        void          SetSegmentLength( std::uint32_t length ) noexcept;
+        void          SetSegmentLength( std::uint32_t const length ) noexcept;
 
         NameIndex     GetSegmentNameIndex( ) const noexcept { return _segmentNameIndex; }
-        void          SetSegmentNameIndex( NameIndex index ) noexcept;
+        void          SetSegmentNameIndex( NameIndex const index ) noexcept;
 
         NameIndex     GetClassNameIndex( ) const noexcept   { return _classNameIndex;   }
-        void          SetClassNameIndex( NameIndex index ) noexcept;
+        void          SetClassNameIndex( NameIndex const index ) noexcept;
 
         NameIndex     GetOverlayNameIndex( ) const noexcept { return _overlayNameIndex; }
-        void          SetOverlayNameIndex( NameIndex index ) noexcept;
+        void          SetOverlayNameIndex( NameIndex const index ) noexcept;
 
         std::optional<std::uint16_t> GetAbsoluteFrame( ) const noexcept  { return _absoluteFrame;  }
         std::optional<std::uint8_t>  GetAbsoluteOffset( ) const noexcept { return _absoluteOffset; }
-        void                         SetAbsoluteAddress( std::uint16_t frame, std::uint8_t offset ) noexcept;
+        void                         SetAbsoluteAddress( std::uint16_t const frame, std::uint8_t const offset ) noexcept;
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -908,15 +908,15 @@ namespace Omf {
             SegmentIndex segmentIndex;
         };
 
-        explicit OmfGrpdefRecord( NameIndex groupNameIndex = { } );
-        OmfGrpdefRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfGrpdefRecord( NameIndex const groupNameIndex = { } );
+        OmfGrpdefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         NameIndex GetGroupNameIndex( ) const noexcept { return _groupNameIndex; }
-        void      SetGroupNameIndex( NameIndex index ) noexcept;
+        void      SetGroupNameIndex( NameIndex const index ) noexcept;
 
         std::vector<Component> const& GetComponents( ) const noexcept { return _components; }
-        void                          SetComponents( std::vector<Component> components );
-        void                          AddComponent( Component component );
+        void                          SetComponents( std::vector<Component> const components );
+        void                          AddComponent( Component const component );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -957,14 +957,14 @@ namespace Omf {
 
         using Subrecord = std::variant<ThreadSubrecord, FixupSubrecord>;
 
-        explicit OmfFixuppRecord( bool is32Bit = false );
-        OmfFixuppRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfFixuppRecord( bool const is32Bit = false );
+        OmfFixuppRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void SetIs32Bit( bool is32Bit ) noexcept;
+        void SetIs32Bit( bool const is32Bit ) noexcept;
 
         std::vector<Subrecord> const& GetSubrecords( ) const noexcept { return _subrecords; }
-        void                          SetSubrecords( std::vector<Subrecord> subrecords );
-        void                          AddSubrecord( Subrecord subrecord );
+        void                          SetSubrecords( std::vector<Subrecord> const subrecords );
+        void                          AddSubrecord( Subrecord const subrecord );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -988,16 +988,16 @@ namespace Omf {
 
     public:
 
-        OmfLedataRecord( SegmentIndex segmentIndex, std::uint32_t dataOffset, std::vector<std::byte> data, bool is32Bit = false );
-        OmfLedataRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfLedataRecord( SegmentIndex const segmentIndex, std::uint32_t const dataOffset, std::vector<std::byte> const data, bool const is32Bit = false );
+        OmfLedataRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void          SetIs32Bit( bool is32Bit ) noexcept;
+        void          SetIs32Bit( bool const is32Bit ) noexcept;
 
         SegmentIndex  GetSegmentIndex( ) const noexcept { return _segmentIndex; }
-        void          SetSegmentIndex( SegmentIndex segment ) noexcept;
+        void          SetSegmentIndex( SegmentIndex const segment ) noexcept;
 
         std::uint32_t GetDataOffset( ) const noexcept   { return _dataOffset;   }
-        void          SetDataOffset( std::uint32_t offset ) noexcept;
+        void          SetDataOffset( std::uint32_t const offset ) noexcept;
 
         std::span<std::byte const> GetData( ) const noexcept { return _data; }
         std::span<std::byte>       GetMutableData( ) noexcept {
@@ -1005,7 +1005,7 @@ namespace Omf {
             return _data;
         }
 
-        void SetData( std::vector<std::byte> newData );
+        void SetData( std::vector<std::byte> const newData );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1037,19 +1037,19 @@ namespace Omf {
                          std::vector<IteratedDataBlock>>                     content;
         };
 
-        explicit OmfLidataRecord( bool is32Bit = false );
-        OmfLidataRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfLidataRecord( bool const is32Bit = false );
+        OmfLidataRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void          SetIs32Bit( bool is32Bit ) noexcept;
+        void          SetIs32Bit( bool const is32Bit ) noexcept;
 
         SegmentIndex  GetSegmentIndex( ) const noexcept { return _segmentIndex; }
-        void          SetSegmentIndex( SegmentIndex segment ) noexcept;
+        void          SetSegmentIndex( SegmentIndex const segment ) noexcept;
 
         std::uint32_t GetDataOffset( ) const noexcept   { return _dataOffset;   }
-        void          SetDataOffset( std::uint32_t offset ) noexcept;
+        void          SetDataOffset( std::uint32_t const offset ) noexcept;
 
         std::vector<IteratedDataBlock> const& GetBlocks( ) const noexcept { return _blocks; }
-        void                                  SetBlocks( std::vector<IteratedDataBlock> blocks );
+        void                                  SetBlocks( std::vector<IteratedDataBlock> const blocks );
         std::vector<std::byte>                ExpandData( ) const;
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
@@ -1092,16 +1092,16 @@ namespace Omf {
             std::uint32_t elementSize     { 1 }; // Used when dataSegmentType == FarComm (0x61)
         };
 
-        explicit OmfComdefRecord( bool isLocal = false );
-        OmfComdefRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfComdefRecord( bool const isLocal = false );
+        OmfComdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         bool IsLocal( ) const noexcept { return GetRecordType( ) == RecordType::Lcomdef; }
-        void SetIsLocal( bool isLocal ) noexcept;
+        void SetIsLocal( bool const isLocal ) noexcept;
 
         std::vector<CommunalSymbol> const& GetSymbols( ) const noexcept { return _symbols; }
-        void                               SetSymbols( std::vector<CommunalSymbol> symbols );
-        void                               AddSymbol( CommunalSymbol symbol );
-        std::size_t                        RenameSymbol( std::string_view oldName, std::string_view newName );
+        void                               SetSymbols( std::vector<CommunalSymbol> const symbols );
+        void                               AddSymbol( CommunalSymbol const symbol );
+        std::size_t                        RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1130,19 +1130,19 @@ namespace Omf {
             std::uint32_t value  { };
         };
 
-        explicit OmfBakpatRecord( bool is32Bit = false );
-        OmfBakpatRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfBakpatRecord( bool const is32Bit = false );
+        OmfBakpatRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void              SetIs32Bit( bool is32Bit ) noexcept;
+        void              SetIs32Bit( bool const is32Bit ) noexcept;
 
         SegmentIndex      GetSegmentIndex( ) const noexcept { return _segmentIndex; }
-        void              SetSegmentIndex( SegmentIndex segment ) noexcept;
+        void              SetSegmentIndex( SegmentIndex const segment ) noexcept;
 
         FixupLocationType GetLocationType( ) const noexcept { return _locationType; }
-        void              SetLocationType( FixupLocationType type ) noexcept;
+        void              SetLocationType( FixupLocationType const type ) noexcept;
 
         std::vector<BackpatchEntry> const& GetEntries( ) const noexcept { return _entries; }
-        void                               SetEntries( std::vector<BackpatchEntry> entries );
+        void                               SetEntries( std::vector<BackpatchEntry> const entries );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1170,19 +1170,19 @@ namespace Omf {
 
         using BackpatchEntry = OmfBakpatRecord::BackpatchEntry;
 
-        explicit OmfNbkpatRecord( bool is32Bit = false );
-        OmfNbkpatRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfNbkpatRecord( bool const is32Bit = false );
+        OmfNbkpatRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void              SetIs32Bit( bool is32Bit ) noexcept;
+        void              SetIs32Bit( bool const is32Bit ) noexcept;
 
         FixupLocationType GetLocationType( ) const noexcept    { return _locationType;    }
-        void              SetLocationType( FixupLocationType type ) noexcept;
+        void              SetLocationType( FixupLocationType const type ) noexcept;
 
         NameIndex         GetPublicNameIndex( ) const noexcept { return _publicNameIndex; }
-        void              SetPublicNameIndex( NameIndex index ) noexcept;
+        void              SetPublicNameIndex( NameIndex const index ) noexcept;
 
         std::vector<BackpatchEntry> const& GetEntries( ) const noexcept { return _entries; }
-        void                               SetEntries( std::vector<BackpatchEntry> entries );
+        void                               SetEntries( std::vector<BackpatchEntry> const entries );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1232,43 +1232,43 @@ namespace Omf {
         using DataPayload = std::variant<std::vector<std::byte>,
                                          std::vector<OmfLidataRecord::IteratedDataBlock>>;
 
-        explicit OmfComdatRecord( bool is32Bit = false );
-        OmfComdatRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfComdatRecord( bool const is32Bit = false );
+        OmfComdatRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void                       SetIs32Bit( bool is32Bit ) noexcept;
+        void                       SetIs32Bit( bool const is32Bit ) noexcept;
 
         std::uint8_t               GetFlags( ) const noexcept             { return _flags;                  }
-        void                       SetFlags( std::uint8_t flags ) noexcept;
+        void                       SetFlags( std::uint8_t const flags ) noexcept;
         bool                       IsContinuation( ) const noexcept       { return ( _flags & 0x01u ) != 0; }
         bool                       IsIteratedData( ) const noexcept       { return ( _flags & 0x02u ) != 0; }
         bool                       IsLocalSymbol( ) const noexcept        { return ( _flags & 0x04u ) != 0; }
         bool                       IsCodeSegmentData( ) const noexcept    { return ( _flags & 0x08u ) != 0; }
 
         SelectionCriteria          GetSelectionCriteria( ) const noexcept { return _selectionCriteria;      }
-        void                       SetSelectionCriteria( SelectionCriteria criteria ) noexcept;
+        void                       SetSelectionCriteria( SelectionCriteria const criteria ) noexcept;
 
         AllocationType             GetAllocationType( ) const noexcept    { return _allocationType;         }
-        void                       SetAllocationType( AllocationType allocType ) noexcept;
+        void                       SetAllocationType( AllocationType const allocType ) noexcept;
 
         OmfSegdefRecord::Alignment GetAlignment( ) const noexcept         { return _alignment;              }
-        void                       SetAlignment( OmfSegdefRecord::Alignment align ) noexcept;
+        void                       SetAlignment( OmfSegdefRecord::Alignment const align ) noexcept;
 
         std::uint32_t              GetDataOffset( ) const noexcept        { return _dataOffset;             }
-        void                       SetDataOffset( std::uint32_t offset ) noexcept;
+        void                       SetDataOffset( std::uint32_t const offset ) noexcept;
 
         TypeIndex                  GetTypeIndex( ) const noexcept         { return _typeIndex;              }
-        void                       SetTypeIndex( TypeIndex index ) noexcept;
+        void                       SetTypeIndex( TypeIndex const index ) noexcept;
 
         GroupIndex                   GetPublicBaseGroup( ) const noexcept   { return _publicBaseGroup;   }
         SegmentIndex                 GetPublicBaseSegment( ) const noexcept { return _publicBaseSegment; }
         std::optional<std::uint16_t> GetPublicBaseFrame( ) const noexcept   { return _publicBaseFrame;   }
-        void                         SetExplicitBase( GroupIndex group, SegmentIndex segment, std::optional<std::uint16_t> frame = std::nullopt ) noexcept;
+        void                         SetExplicitBase( GroupIndex const group, SegmentIndex const segment, std::optional<std::uint16_t> const frame = std::nullopt ) noexcept;
 
         NameIndex                  GetPublicNameIndex( ) const noexcept   { return _publicNameIndex;        }
-        void                       SetPublicNameIndex( NameIndex index ) noexcept;
+        void                       SetPublicNameIndex( NameIndex const index ) noexcept;
 
         DataPayload const&         GetDataPayload( ) const noexcept       { return _dataPayload;            }
-        void                       SetDataPayload( DataPayload payload );
+        void                       SetDataPayload( DataPayload const payload );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1279,9 +1279,9 @@ namespace Omf {
     private:
 
         std::uint8_t                 _flags             { };
-        SelectionCriteria            _selectionCriteria { SelectionCriteria::PickAny              };
-        AllocationType               _allocationType    { AllocationType::Explicit                };
-        OmfSegdefRecord::Alignment   _alignment         { OmfSegdefRecord::Alignment::Absolute    };
+        SelectionCriteria            _selectionCriteria { SelectionCriteria::PickAny           };
+        AllocationType               _allocationType    { AllocationType::Explicit             };
+        OmfSegdefRecord::Alignment   _alignment         { OmfSegdefRecord::Alignment::Absolute };
         std::uint32_t                _dataOffset        { };
         TypeIndex                    _typeIndex;
         GroupIndex                   _publicBaseGroup;
@@ -1308,12 +1308,12 @@ namespace Omf {
         };
 
         OmfAliasRecord( );
-        OmfAliasRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfAliasRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::vector<AliasEntry> const& GetAliases( ) const noexcept { return _aliases; }
-        void                           SetAliases( std::vector<AliasEntry> aliases );
-        void                           AddAlias( AliasEntry entry );
-        std::size_t                    RenameSymbol( std::string_view oldName, std::string_view newName );
+        void                           SetAliases( std::vector<AliasEntry> const aliases );
+        void                           AddAlias( AliasEntry const entry );
+        std::size_t                    RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1337,11 +1337,11 @@ namespace Omf {
 
     public:
 
-        explicit OmfVernumRecord( std::string version );
-        OmfVernumRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfVernumRecord( std::string const version );
+        OmfVernumRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::string_view GetVersion( ) const noexcept { return _version; }
-        void             SetVersion( std::string newVersion );
+        void             SetVersion( std::string const newVersion );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1361,14 +1361,14 @@ namespace Omf {
 
     public:
 
-        OmfVendextRecord( std::uint16_t subtype, std::vector<std::byte> extensionData );
-        OmfVendextRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfVendextRecord( std::uint16_t const subtype, std::vector<std::byte> const extensionData );
+        OmfVendextRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::uint16_t              GetSubtype( ) const noexcept       { return _subtype;       }
-        void                       SetSubtype( std::uint16_t subtype ) noexcept;
+        void                       SetSubtype( std::uint16_t const subtype ) noexcept;
 
         std::span<std::byte const> GetExtensionData( ) const noexcept { return _extensionData; }
-        void                       SetExtensionData( std::vector<std::byte> data );
+        void                       SetExtensionData( std::vector<std::byte> const data );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1395,16 +1395,16 @@ namespace Omf {
     public:
 
         OmfRheadrRecord( );
-        OmfRheadrRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfRheadrRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::string_view           GetModuleName( ) const noexcept         { return _moduleName;         }
-        void                       SetModuleName( std::string name );
+        void                       SetModuleName( std::string const name );
 
         std::uint8_t               GetModuleType( ) const noexcept         { return _moduleType;         }
-        void                       SetModuleType( std::uint8_t type ) noexcept;
+        void                       SetModuleType( std::uint8_t const type ) noexcept;
 
         std::span<std::byte const> GetTrailingAttributes( ) const noexcept { return _trailingAttributes; }
-        void                       SetTrailingAttributes( std::vector<std::byte> attrs );
+        void                       SetTrailingAttributes( std::vector<std::byte> const attrs );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1445,10 +1445,10 @@ namespace Omf {
         };
 
         OmfRegintRecord( );
-        OmfRegintRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfRegintRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::vector<RegisterInitEntry> const& GetEntries( ) const noexcept { return _entries; }
-        void                                  SetEntries( std::vector<RegisterInitEntry> entries );
+        void                                  SetEntries( std::vector<RegisterInitEntry> const entries );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1470,13 +1470,13 @@ namespace Omf {
     public:
 
         OmfRedataRecord( );
-        OmfRedataRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfRedataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         FixupTargetSpec            GetBaseSpec( ) const noexcept { return _baseSpec; }
-        void                       SetBaseSpec( FixupTargetSpec spec );
+        void                       SetBaseSpec( FixupTargetSpec const spec );
 
         std::span<std::byte const> GetData( ) const noexcept     { return _data;     }
-        void                       SetData( std::vector<std::byte> data );
+        void                       SetData( std::vector<std::byte> const data );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1500,13 +1500,13 @@ namespace Omf {
         using IteratedDataBlock = OmfLidataRecord::IteratedDataBlock;
 
         OmfRidataRecord( );
-        OmfRidataRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfRidataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         FixupTargetSpec                       GetBaseSpec( ) const noexcept { return _baseSpec; }
-        void                                  SetBaseSpec( FixupTargetSpec spec );
+        void                                  SetBaseSpec( FixupTargetSpec const spec );
 
         std::vector<IteratedDataBlock> const& GetBlocks( ) const noexcept   { return _blocks;   }
-        void                                  SetBlocks( std::vector<IteratedDataBlock> blocks );
+        void                                  SetBlocks( std::vector<IteratedDataBlock> const blocks );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1529,14 +1529,14 @@ namespace Omf {
     public:
 
         OmfOvldefRecord( );
-        OmfOvldefRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfOvldefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::string_view GetOverlayName( ) const noexcept          { return _overlayName;          }
-        void             SetOverlayName( std::string name );
+        void             SetOverlayName( std::string const name );
 
         std::uint16_t    GetLocationBlock( ) const noexcept        { return _locationBlock;        }
         std::uint16_t    GetLocationByteOffset( ) const noexcept   { return _locationByteOffset;   }
-        void             SetLocation( std::uint16_t block, std::uint16_t byteOffset ) noexcept;
+        void             SetLocation( std::uint16_t const block, std::uint16_t const byteOffset ) noexcept;
 
         std::uint8_t     GetOverlayAttributes( ) const noexcept    { return _overlayAttributes;    }
         OverlayIndex     GetSharedOverlayIndex( ) const noexcept   { return _sharedOverlayIndex;   }
@@ -1572,11 +1572,11 @@ namespace Omf {
             Block   = 1
         };
 
-        explicit OmfEndrecRecord( EndType endType = EndType::Block );
-        OmfEndrecRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfEndrecRecord( EndType const endType = EndType::Block );
+        OmfEndrecRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         EndType GetEndType( ) const noexcept { return _endType; }
-        void    SetEndType( EndType type ) noexcept;
+        void    SetEndType( EndType const type ) noexcept;
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1597,33 +1597,33 @@ namespace Omf {
 
     public:
 
-        explicit OmfBlkdefRecord( bool is32Bit = false );
-        OmfBlkdefRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfBlkdefRecord( bool const is32Bit = false );
+        OmfBlkdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void                         SetIs32Bit( bool is32Bit ) noexcept;
+        void                         SetIs32Bit( bool const is32Bit ) noexcept;
 
         GroupIndex                   GetBaseGroup( ) const noexcept           { return _baseGroup;           }
         SegmentIndex                 GetBaseSegment( ) const noexcept         { return _baseSegment;         }
         std::optional<std::uint16_t> GetBaseFrame( ) const noexcept           { return _baseFrame;           }
-        void                         SetBase( GroupIndex group, SegmentIndex segment, std::optional<std::uint16_t> frame = std::nullopt ) noexcept;
+        void                         SetBase( GroupIndex const group, SegmentIndex const segment, std::optional<std::uint16_t> const frame = std::nullopt ) noexcept;
 
         std::string_view             GetBlockName( ) const noexcept           { return _blockName;           }
-        void                         SetBlockName( std::string name );
+        void                         SetBlockName( std::string const name );
 
         std::uint32_t                GetBlockOffset( ) const noexcept         { return _blockOffset;         }
-        void                         SetBlockOffset( std::uint32_t offset ) noexcept;
+        void                         SetBlockOffset( std::uint32_t const offset ) noexcept;
 
         std::uint32_t                GetBlockLength( ) const noexcept         { return _blockLength;         }
-        void                         SetBlockLength( std::uint32_t length ) noexcept;
+        void                         SetBlockLength( std::uint32_t const length ) noexcept;
 
         std::uint8_t                 GetProcedureFlags( ) const noexcept      { return _procedureFlags;      }
-        void                         SetProcedureFlags( std::uint8_t flags ) noexcept;
+        void                         SetProcedureFlags( std::uint8_t const flags ) noexcept;
 
         std::optional<std::uint32_t> GetReturnAddressOffset( ) const noexcept { return _returnAddressOffset; }
-        void                         SetReturnAddressOffset( std::optional<std::uint32_t> offset ) noexcept;
+        void                         SetReturnAddressOffset( std::optional<std::uint32_t> const offset ) noexcept;
 
         TypeIndex                    GetTypeIndex( ) const noexcept           { return _typeIndex;           }
-        void                         SetTypeIndex( TypeIndex index ) noexcept;
+        void                         SetTypeIndex( TypeIndex const index ) noexcept;
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1651,10 +1651,10 @@ namespace Omf {
 
     public:
 
-        explicit OmfBlkendRecord( bool is32Bit = false );
-        OmfBlkendRecord( RecordType type, std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfBlkendRecord( bool const is32Bit = false );
+        OmfBlkendRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
-        void SetIs32Bit( bool is32Bit ) noexcept;
+        void SetIs32Bit( bool const is32Bit ) noexcept;
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1674,17 +1674,17 @@ namespace Omf {
         using DebugSymbol = OmfPubdefRecord::PublicSymbol;
 
         OmfDebsymRecord( );
-        OmfDebsymRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfDebsymRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::uint8_t                    GetFrameMethod( ) const noexcept { return _frameMethod; }
-        void                            SetFrameMethod( std::uint8_t method ) noexcept;
+        void                            SetFrameMethod( std::uint8_t const method ) noexcept;
 
         FixupTargetSpec                 GetBaseSpec( ) const noexcept    { return _baseSpec;    }
-        void                            SetBaseSpec( FixupTargetSpec spec );
+        void                            SetBaseSpec( FixupTargetSpec const spec );
 
         std::vector<DebugSymbol> const& GetSymbols( ) const noexcept     { return _symbols;     }
-        void                            SetSymbols( std::vector<DebugSymbol> symbols );
-        std::size_t                     RenameSymbol( std::string_view oldName, std::string_view newName );
+        void                            SetSymbols( std::vector<DebugSymbol> const symbols );
+        std::size_t                     RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1707,17 +1707,17 @@ namespace Omf {
 
     public:
 
-        OmfPedataRecord( std::uint16_t frameNumber, std::uint8_t offset, std::vector<std::byte> data );
-        OmfPedataRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfPedataRecord( std::uint16_t const frameNumber, std::uint8_t const offset, std::vector<std::byte> const data );
+        OmfPedataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::uint16_t              GetFrameNumber( ) const noexcept { return _frameNumber; }
-        void                       SetFrameNumber( std::uint16_t frame ) noexcept;
+        void                       SetFrameNumber( std::uint16_t const frame ) noexcept;
 
         std::uint8_t               GetOffset( ) const noexcept      { return _offset;      }
-        void                       SetOffset( std::uint8_t offset ) noexcept;
+        void                       SetOffset( std::uint8_t const offset ) noexcept;
 
         std::span<std::byte const> GetData( ) const noexcept        { return _data;        }
-        void                       SetData( std::vector<std::byte> data );
+        void                       SetData( std::vector<std::byte> const data );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1742,16 +1742,16 @@ namespace Omf {
         using IteratedDataBlock = OmfLidataRecord::IteratedDataBlock;
 
         OmfPidataRecord( );
-        OmfPidataRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfPidataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::uint16_t                         GetFrameNumber( ) const noexcept { return _frameNumber; }
-        void                                  SetFrameNumber( std::uint16_t frame ) noexcept;
+        void                                  SetFrameNumber( std::uint16_t const frame ) noexcept;
 
         std::uint8_t                          GetOffset( ) const noexcept      { return _offset;      }
-        void                                  SetOffset( std::uint8_t offset ) noexcept;
+        void                                  SetOffset( std::uint8_t const offset ) noexcept;
 
         std::vector<IteratedDataBlock> const& GetBlocks( ) const noexcept      { return _blocks;      }
-        void                                  SetBlocks( std::vector<IteratedDataBlock> blocks );
+        void                                  SetBlocks( std::vector<IteratedDataBlock> const blocks );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1779,17 +1779,17 @@ namespace Omf {
     public:
 
         OmfLibhedRecord( );
-        OmfLibhedRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfLibhedRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::uint32_t GetModuleCount( ) const noexcept           { return _moduleCount;           }
-        void          SetModuleCount( std::uint32_t count ) noexcept;
+        void          SetModuleCount( std::uint32_t const count ) noexcept;
 
         std::uint16_t GetDictionaryBlockNumber( ) const noexcept { return _dictionaryBlockNumber; }
         std::uint16_t GetDictionaryByteOffset( ) const noexcept  { return _dictionaryByteOffset;  }
-        void          SetDictionaryLocation( std::uint16_t block, std::uint16_t byteOffset ) noexcept;
+        void          SetDictionaryLocation( std::uint16_t const block, std::uint16_t const byteOffset ) noexcept;
 
         std::uint8_t  GetFlags( ) const noexcept                 { return _flags;                 }
-        void          SetFlags( std::uint8_t flags ) noexcept;
+        void          SetFlags( std::uint8_t const flags ) noexcept;
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1814,11 +1814,11 @@ namespace Omf {
     public:
 
         OmfLibnamRecord( );
-        OmfLibnamRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfLibnamRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::vector<std::string> const& GetModuleNames( ) const noexcept { return _moduleNames; }
-        void                            SetModuleNames( std::vector<std::string> names );
-        void                            AddModuleName( std::string name );
+        void                            SetModuleNames( std::vector<std::string> const names );
+        void                            AddModuleName( std::string const name );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1845,11 +1845,11 @@ namespace Omf {
         };
 
         OmfLiblocRecord( );
-        OmfLiblocRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfLiblocRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::vector<ModuleLocation> const& GetLocations( ) const noexcept { return _locations; }
-        void                               SetLocations( std::vector<ModuleLocation> locations );
-        void                               AddLocation( ModuleLocation location );
+        void                               SetLocations( std::vector<ModuleLocation> const locations );
+        void                               AddLocation( ModuleLocation const location );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1871,15 +1871,15 @@ namespace Omf {
     public:
 
         OmfLibdicRecord( );
-        OmfLibdicRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfLibdicRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         // Each inner vector represents the public symbols exported by one module
         std::vector<std::vector<std::string>> const& GetModulePublicGroups( ) const noexcept {
             return _modulePublicGroups;
         }
 
-        void        SetModulePublicGroups( std::vector<std::vector<std::string>> groups );
-        std::size_t RenameSymbol( std::string_view oldName, std::string_view newName );
+        void        SetModulePublicGroups( std::vector<std::vector<std::string>> const groups );
+        std::size_t RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1901,24 +1901,24 @@ namespace Omf {
     public:
 
         OmfMsLibHeaderRecord( );
-        OmfMsLibHeaderRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        OmfMsLibHeaderRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         // Note: In MS .LIB files, pageSize is encoded in the record length field as (pageSize - 3)
         std::uint16_t              GetPageSize( ) const noexcept             { return _pageSize;                }
-        void                       SetPageSize( std::uint16_t pageSize );
+        void                       SetPageSize( std::uint16_t const pageSize );
 
         std::uint32_t              GetDictionaryFileOffset( ) const noexcept { return _dictionaryFileOffset;    }
-        void                       SetDictionaryFileOffset( std::uint32_t offset ) noexcept;
+        void                       SetDictionaryFileOffset( std::uint32_t const offset ) noexcept;
 
         std::uint16_t              GetDictionaryBlockCount( ) const noexcept { return _dictionaryBlockCount;    }
-        void                       SetDictionaryBlockCount( std::uint16_t count ) noexcept;
+        void                       SetDictionaryBlockCount( std::uint16_t const count ) noexcept;
 
         std::uint8_t               GetFlags( ) const noexcept                { return _flags;                   }
-        void                       SetFlags( std::uint8_t flags ) noexcept;
+        void                       SetFlags( std::uint8_t const flags ) noexcept;
         bool                       IsCaseSensitive( ) const noexcept         { return ( _flags & 0x01u ) != 0;  }
 
         std::span<std::byte const> GetPaddingBytes( ) const noexcept         { return _paddingBytes;            }
-        void                       SetPaddingBytes( std::vector<std::byte> padding );
+        void                       SetPaddingBytes( std::vector<std::byte> const padding );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1943,11 +1943,11 @@ namespace Omf {
 
     public:
 
-        explicit OmfMsLibEndRecord( std::vector<std::byte> padding = { } );
-        OmfMsLibEndRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum );
+        explicit OmfMsLibEndRecord( std::vector<std::byte> const padding = { } );
+        OmfMsLibEndRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum );
 
         std::span<std::byte const> GetPaddingBytes( ) const noexcept { return _paddingBytes; }
-        void                       SetPaddingBytes( std::vector<std::byte> padding );
+        void                       SetPaddingBytes( std::vector<std::byte> const padding );
 
         std::unique_ptr<OmfRecord> Clone( ) const override;
 
@@ -1980,20 +1980,20 @@ namespace Omf {
         auto GetRecordsOfType( ) const {
             return _records
                 | std::views::transform( []( auto const& ptr ) { return ptr->template As<T>( ); } )
-                | std::views::filter( []( T const* ptr ) { return ptr != nullptr; } );
+                | std::views::filter( []( T const* const ptr ) { return ptr != nullptr; } );
         }
 
         template <typename T>
             requires std::derived_from<T, OmfRecord>
         auto GetRecordsOfType( ) {
             return _records
-                | std::views::transform( []( auto& ptr ) { return ptr->template As<T>( ); } )
-                | std::views::filter( []( T* ptr ) { return ptr != nullptr; } );
+                | std::views::transform( []( auto const& ptr ) { return ptr->template As<T>( ); } )
+                | std::views::filter( []( T* const ptr ) { return ptr != nullptr; } );
         }
 
         void AddRecord( std::unique_ptr<OmfRecord> record );
-        void InsertRecord( std::size_t index, std::unique_ptr<OmfRecord> record );
-        void RemoveRecord( std::size_t index );
+        void InsertRecord( std::size_t const index, std::unique_ptr<OmfRecord> record );
+        void RemoveRecord( std::size_t const index );
 
         // Returns the raw module name from THEADR, LHEADR, or RHEADR (if present)
         std::optional<std::string_view> GetModuleName( ) const noexcept;
@@ -2008,12 +2008,12 @@ namespace Omf {
             return _trailingLibraryPadding;
         }
 
-        void SetTrailingLibraryPadding( std::vector<std::byte> padding );
+        void SetTrailingLibraryPadding( std::vector<std::byte> const padding );
 
         // Resolves a 1-based NameIndex across all OmfLnamesRecord instances in this module
-        std::optional<std::string_view> ResolveName( NameIndex index ) const noexcept;
+        std::optional<std::string_view> ResolveName( NameIndex const index ) const noexcept;
 
-        std::size_t RenameSymbol( std::string_view oldName, std::string_view newName );
+        std::size_t RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
     private:
 
@@ -2028,7 +2028,7 @@ namespace Omf {
 
         static OmfFile LoadFromFile( std::filesystem::path const& filePath, OmfLoadOptions const& options = { } );
         static OmfFile LoadFromStream( std::istream& inputStream, OmfLoadOptions const& options = { } );
-        static OmfFile LoadFromMemory( std::span<std::byte const> buffer, OmfLoadOptions const& options = { } );
+        static OmfFile LoadFromMemory( std::span<std::byte const> const buffer, OmfLoadOptions const& options = { } );
 
         void                   SaveToFile( std::filesystem::path const& filePath, OmfSaveOptions const& options = { } ) const;
         void                   SaveToStream( std::ostream& outputStream, OmfSaveOptions const& options = { } ) const;
@@ -2048,17 +2048,17 @@ namespace Omf {
             return _trailingLibraryDictionary;
         }
 
-        void        SetTrailingLibraryDictionary( std::vector<std::byte> dictionaryBytes );
-        std::size_t RenameSymbol( std::string_view oldName, std::string_view newName );
+        void        SetTrailingLibraryDictionary( std::vector<std::byte> const dictionaryBytes );
+        std::size_t RenameSymbol( std::string_view const oldName, std::string_view const newName );
 
     private:
 
         static std::unique_ptr<OmfRecord> _ParseSingleRecord(
-            RecordType                 type,
-            std::span<std::byte const> rawPayload,
-            std::uint8_t               originalChecksum,
-            bool                       hadValidChecksum,
-            std::size_t                fileOffset
+            RecordType const                 type,
+            std::span<std::byte const> const rawPayload,
+            std::uint8_t const               originalChecksum,
+            bool const                       hadValidChecksum,
+            std::size_t const                fileOffset
         );
 
         std::vector<std::unique_ptr<OmfRecord>> _records;

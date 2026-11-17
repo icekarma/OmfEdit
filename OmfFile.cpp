@@ -23,7 +23,7 @@ namespace Omf {
 
         public:
 
-            OmfBinaryReader( std::span<std::byte const> buffer, RecordType recordType, std::size_t baseFileOffset = 0 ) noexcept:
+            OmfBinaryReader( std::span<std::byte const> const buffer, RecordType const recordType, std::size_t const baseFileOffset = 0 ) noexcept:
                 _buffer         ( buffer         ),
                 _position       ( 0              ),
                 _recordType     ( recordType     ),
@@ -73,7 +73,7 @@ namespace Omf {
                 return b0 | ( b1 << 8 ) | ( b2 << 16 ) | ( b3 << 24 );
             }
 
-            std::uint32_t ReadOffset( bool is32Bit ) {
+            std::uint32_t ReadOffset( bool const is32Bit ) {
                 return is32Bit ? ReadUInt32( ) : static_cast<std::uint32_t>( ReadUInt16( ) );
             }
 
@@ -116,7 +116,7 @@ namespace Omf {
                 }
             }
 
-            std::vector<std::byte> ReadBytes( std::size_t count ) {
+            std::vector<std::byte> ReadBytes( std::size_t const count ) {
                 _EnsureAvailable( count );
                 std::vector<std::byte> result(
                     _buffer.begin( ) + static_cast<std::ptrdiff_t>( _position ),
@@ -130,7 +130,7 @@ namespace Omf {
                 return ReadBytes( GetRemainingCount( ) );
             }
 
-            FixupTargetSpec ReadFixupTargetSpec( bool is32Bit ) {
+            FixupTargetSpec ReadFixupTargetSpec( bool const is32Bit ) {
                 FixupTargetSpec    spec   { };
                 std::uint8_t const fixdat { ReadUInt8( ) };
 
@@ -167,7 +167,7 @@ namespace Omf {
                 return spec;
             }
 
-            OmfLidataRecord::IteratedDataBlock ReadIteratedDataBlock( bool is32Bit ) {
+            OmfLidataRecord::IteratedDataBlock ReadIteratedDataBlock( bool const is32Bit ) {
                 OmfLidataRecord::IteratedDataBlock block { };
                 block.repeatCount = is32Bit ? ReadUInt32( ) : static_cast<std::uint32_t>( ReadUInt16( ) );
                 std::uint16_t const blockCount { ReadUInt16( ) };
@@ -188,7 +188,7 @@ namespace Omf {
 
         private:
 
-            void _EnsureAvailable( std::size_t byteCount ) const {
+            void _EnsureAvailable( std::size_t const byteCount ) const {
                 if ( ( _position + byteCount ) > _buffer.size( ) ) {
                     throw OmfParseException( "Unexpected end of OMF record payload", _baseFileOffset + _position, _recordType );
                 }
@@ -397,7 +397,7 @@ namespace Omf {
         /*empty*/
     }
 
-    OmfRecord::OmfRecord( RecordType const type, std::span<std::byte const> rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
+    OmfRecord::OmfRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
         _recordType       ( type                                   ),
         _isDirty          ( false                                  ),
         _originalChecksum ( originalChecksum                       ),
@@ -503,7 +503,7 @@ namespace Omf {
         /*empty*/
     }
 
-    OmfUnknownRecord::OmfUnknownRecord( RecordType const type, std::span<std::byte const> rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
+    OmfUnknownRecord::OmfUnknownRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
         OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum ),
         _payload  ( rawPayload.begin( ), rawPayload.end( )               )
     {
@@ -591,14 +591,14 @@ namespace Omf {
         _commentData  = reader.ReadRemainingBytes( );
     }
 
-    void OmfComentRecord::SetNoPurge( bool value ) noexcept {
+    void OmfComentRecord::SetNoPurge( bool const value ) noexcept {
         if ( _noPurge != value ) {
             _noPurge = value;
             MarkDirty( );
         }
     }
 
-    void OmfComentRecord::SetNoList( bool value ) noexcept {
+    void OmfComentRecord::SetNoList( bool const value ) noexcept {
         if ( _noList != value ) {
             _noList = value;
             MarkDirty( );
@@ -2554,7 +2554,7 @@ namespace Omf {
         /*empty*/
     }
 
-    void OmfBlkendRecord::SetIs32Bit( bool is32Bit ) noexcept {
+    void OmfBlkendRecord::SetIs32Bit( bool const is32Bit ) noexcept {
         SetRecordTypeProtected( is32Bit ? RecordType::Blkend32 : RecordType::Blkend );
     }
 
@@ -2941,7 +2941,7 @@ namespace Omf {
         /*empty*/
     }
 
-    OmfMsLibHeaderRecord::OmfMsLibHeaderRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum ):
+    OmfMsLibHeaderRecord::OmfMsLibHeaderRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
         OmfRecord ( RecordType::MsLibHeader, rawPayload, originalChecksum, hadValidChecksum )
     {
         // Record length = rawPayload.size( ) + 1; pageSize = recordLength + 3 = rawPayload.size( ) + 4
@@ -2955,7 +2955,7 @@ namespace Omf {
         _paddingBytes = reader.ReadRemainingBytes( );
     }
 
-    void OmfMsLibHeaderRecord::SetPageSize( std::uint16_t pageSize ) {
+    void OmfMsLibHeaderRecord::SetPageSize( std::uint16_t const pageSize ) {
         if ( ( pageSize < 16u ) || ( ( pageSize & ( pageSize - 1u ) ) != 0 ) ) {
             throw OmfException( "MS .LIB page size must be a power of 2 >= 16" );
         }
@@ -2965,28 +2965,28 @@ namespace Omf {
         MarkDirty( );
     }
 
-    void OmfMsLibHeaderRecord::SetDictionaryFileOffset( std::uint32_t offset ) noexcept {
+    void OmfMsLibHeaderRecord::SetDictionaryFileOffset( std::uint32_t const offset ) noexcept {
         if ( _dictionaryFileOffset != offset ) {
             _dictionaryFileOffset = offset;
             MarkDirty( );
         }
     }
 
-    void OmfMsLibHeaderRecord::SetDictionaryBlockCount( std::uint16_t count ) noexcept {
+    void OmfMsLibHeaderRecord::SetDictionaryBlockCount( std::uint16_t const count ) noexcept {
         if ( _dictionaryBlockCount != count ) {
             _dictionaryBlockCount = count;
             MarkDirty( );
         }
     }
 
-    void OmfMsLibHeaderRecord::SetFlags( std::uint8_t flags ) noexcept {
+    void OmfMsLibHeaderRecord::SetFlags( std::uint8_t const flags ) noexcept {
         if ( _flags != flags ) {
             _flags = flags;
             MarkDirty( );
         }
     }
 
-    void OmfMsLibHeaderRecord::SetPaddingBytes( std::vector<std::byte> padding ) {
+    void OmfMsLibHeaderRecord::SetPaddingBytes( std::vector<std::byte> const padding ) {
         _paddingBytes = std::move( padding );
         _pageSize     = static_cast<std::uint16_t>( _paddingBytes.size( ) + 11u );
         MarkDirty( );
@@ -3006,21 +3006,21 @@ namespace Omf {
     }
 
     // MsLibEnd (0xF1)
-    OmfMsLibEndRecord::OmfMsLibEndRecord( std::vector<std::byte> padding ):
+    OmfMsLibEndRecord::OmfMsLibEndRecord( std::vector<std::byte> const padding ):
         OmfRecord     ( RecordType::MsLibEnd ),
         _paddingBytes ( std::move( padding ) )
     {
         /*empty*/
     }
 
-    OmfMsLibEndRecord::OmfMsLibEndRecord( std::span<std::byte const> rawPayload, std::uint8_t originalChecksum, bool hadValidChecksum ):
+    OmfMsLibEndRecord::OmfMsLibEndRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
         OmfRecord     ( RecordType::MsLibEnd, rawPayload, originalChecksum, hadValidChecksum ),
         _paddingBytes ( rawPayload.begin( ), rawPayload.end( )                               )
     {
         /*empty*/
     }
 
-    void OmfMsLibEndRecord::SetPaddingBytes( std::vector<std::byte> padding ) {
+    void OmfMsLibEndRecord::SetPaddingBytes( std::vector<std::byte> const padding ) {
         _paddingBytes = std::move( padding );
         MarkDirty( );
     }
@@ -3041,14 +3041,14 @@ namespace Omf {
         _records.push_back( std::move( record ) );
     }
 
-    void OmfModule::InsertRecord( std::size_t index, std::unique_ptr<OmfRecord> record ) {
+    void OmfModule::InsertRecord( std::size_t const index, std::unique_ptr<OmfRecord> record ) {
         if ( index > _records.size( ) ) {
             throw OmfException( "OmfModule::InsertRecord index out of range" );
         }
         _records.insert( _records.begin( ) + static_cast<std::ptrdiff_t>( index ), std::move( record ) );
     }
 
-    void OmfModule::RemoveRecord( std::size_t index ) {
+    void OmfModule::RemoveRecord( std::size_t const index ) {
         if ( index >= _records.size( ) ) {
             throw OmfException( "OmfModule::RemoveRecord index out of range" );
         }
@@ -3094,11 +3094,11 @@ namespace Omf {
         SaveToStream( file, options );
     }
 
-    void OmfModule::SetTrailingLibraryPadding( std::vector<std::byte> padding ) {
+    void OmfModule::SetTrailingLibraryPadding( std::vector<std::byte> const padding ) {
         _trailingLibraryPadding = std::move( padding );
     }
 
-    std::optional<std::string_view> OmfModule::ResolveName( NameIndex index ) const noexcept {
+    std::optional<std::string_view> OmfModule::ResolveName( NameIndex const index ) const noexcept {
         if ( !index.IsValid( ) ) {
             return std::nullopt;
         }
