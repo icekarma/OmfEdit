@@ -50,14 +50,9 @@ LIB_SHARED  = $(LIBDIR)/libomf.so
 LIB_TARGETS = $(LIB_STATIC) $(LIB_SHARED)
 LIB_OBJS    = $(OBJDIR)/OmfFile.o
 
-BIN_TARGETS = $(BINDIR)/omfdump $(BINDIR)/omfedit $(BINDIR)/omfexplode
-ALL_OBJS    = $(LIB_OBJS) $(OBJDIR)/OmfDump.o $(OBJDIR)/OmfEdit.o $(OBJDIR)/OmfExplode.o
+BIN_TARGETS = $(BINDIR)/omfcatalog $(BINDIR)/omfdump $(BINDIR)/omfedit $(BINDIR)/omfexplode
+ALL_OBJS    = $(LIB_OBJS) $(OBJDIR)/OmfCatalog.o $(OBJDIR)/OmfDump.o $(OBJDIR)/OmfEdit.o $(OBJDIR)/OmfExplode.o
 DEPS        = $(ALL_OBJS:.o=.d)
-
-# Automatically include omfedit if OmfEdit.cpp exists in the directory
-ifneq ($(wildcard OmfEdit.cpp),)
-	BIN_TARGETS += $(BINDIR)/omfedit
-endif
 
 # --- 5. Build Rules ---
 all: info dirs $(LIB_TARGETS) $(BIN_TARGETS)
@@ -78,13 +73,16 @@ $(LIB_STATIC): $(LIB_OBJS) | $(LIBDIR)
 $(LIB_SHARED): $(LIB_OBJS) | $(LIBDIR)
 	$(CXX) $(LDFLAGS) -shared -o $@ $^
 
+$(BINDIR)/omfcatalog: $(OBJDIR)/OmfCatalog.o $(LIB_STATIC) | $(BINDIR)
+	$(CXX) $(LDFLAGS) -o $@ $^
+
 $(BINDIR)/omfdump: $(OBJDIR)/OmfDump.o $(LIB_STATIC) | $(BINDIR)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-$(BINDIR)/omfexplode: $(OBJDIR)/OmfExplode.o $(LIB_STATIC) | $(BINDIR)
+$(BINDIR)/omfedit: $(OBJDIR)/OmfEdit.o $(LIB_STATIC) | $(BINDIR)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-$(BINDIR)/omfedit: $(OBJDIR)/OmfEdit.o $(LIB_STATIC) | $(BINDIR)
+$(BINDIR)/omfexplode: $(OBJDIR)/OmfExplode.o $(LIB_STATIC) | $(BINDIR)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o: %.cpp | $(OBJDIR)
@@ -93,7 +91,7 @@ $(OBJDIR)/%.o: %.cpp | $(OBJDIR)
 clean:
 	rm -f $(OBJDIR)/*.o $(OBJDIR)/*.d
 	rm -f $(LIBDIR)/*.a $(LIBDIR)/*.so
-	rm -f $(BINDIR)/omfdump $(BINDIR)/omfexplode $(BINDIR)/omfedit
+	rm -f $(BINDIR)/omfcatalog $(BINDIR)/omfdump $(BINDIR)/omfedit $(BINDIR)/omfexplode
 	@if [ -d $(OBJDIR) ]; then rmdir --ignore-fail-on-non-empty $(OBJDIR) 2>/dev/null || rmdir $(OBJDIR) 2>/dev/null || true; fi
 	@if [ -d $(LIBDIR) ]; then rmdir --ignore-fail-on-non-empty $(LIBDIR) 2>/dev/null || rmdir $(LIBDIR) 2>/dev/null || true; fi
 	@if [ -d $(BINDIR) ]; then rmdir --ignore-fail-on-non-empty $(BINDIR) 2>/dev/null || rmdir $(BINDIR) 2>/dev/null || true; fi
