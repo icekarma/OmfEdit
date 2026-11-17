@@ -139,7 +139,7 @@ int main( int argc, char* argv[] ) {
         std::size_t                                  moduleIndex { 1 };
 
         for ( Omf::OmfModule const& module : modules ) {
-            std::string_view const rawName  { module.GetModuleName( ).value_or( "" )                    };
+            std::string_view const rawName  { module.GetModuleName( ).value_or( "" )                   };
             std::string      const baseStem { SanitizeModuleStem( rawName, moduleIndex, preserveCase ) };
 
             // Disambiguate if multiple modules in the archive share the same stem
@@ -175,7 +175,7 @@ int main( int argc, char* argv[] ) {
 
         return 0;
     } catch ( Omf::OmfParseException const& ex ) {
-        std::cerr << std::format( "OMF Parse Error at offset 0x{:X} (record type 0x{:02X}): {}\n", ex.GetFileOffset( ), static_cast<unsigned>( ex.GetRecordType( ) ), ex.what( ) );
+        std::cerr << std::format( "OMF parse error at offset 0x{:X} (record type 0x{:02X}): {}\n", ex.GetFileOffset( ), static_cast<unsigned>( ex.GetRecordType( ) ), ex.what( ) );
         return 3;
     } catch ( std::exception const& ex ) {
         std::cerr << std::format( "Error: {}\n", ex.what( ) );
