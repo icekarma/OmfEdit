@@ -1,4 +1,5 @@
 #include "OmfFile.h"
+#include "OmfDemangle.h"
 
 #include <cstdint>
 
@@ -65,9 +66,9 @@ namespace {
     };
 
     void RecordFixupTargetUsage(
-        Omf::FixupTargetSpec const&      spec,
-        FixupThreadState const           (&frameThreads)[4],
-        FixupThreadState const           (&targetThreads)[4],
+        Omf::FixupTargetSpec const&        spec,
+        FixupThreadState const             (&frameThreads)[4],
+        FixupThreadState const             (&targetThreads)[4],
         std::unordered_set<std::uint16_t>& usedExternalIndices
     ) {
         // 1. Check Frame specification (F2 = ExternalIndex)
@@ -161,7 +162,7 @@ namespace {
             else if ( auto const* cext { recordPtr->As<Omf::OmfCextdefRecord>( ) } ) {
                 for ( auto const& ext : cext->GetExternals( ) ) {
                     std::string const resolvedName { module.ResolveName( ext.logicalNameIndex ).value_or( "" ) };
-                    bool const isLocal { localNameIndices.contains( ext.logicalNameIndex.value ) };
+                    bool const        isLocal      { localNameIndices.contains( ext.logicalNameIndex.value )   };
                     externalSlots.push_back( ExternalSlot{ resolvedName, isLocal } );
                 }
             }
@@ -196,7 +197,7 @@ namespace {
             else if ( auto const* fixupp { recordPtr->As<Omf::OmfFixuppRecord>( ) } ) {
                 for ( auto const& sub : fixupp->GetSubrecords( ) ) {
                     if ( std::holds_alternative<Omf::OmfFixuppRecord::ThreadSubrecord>( sub ) ) {
-                        auto const& trd { std::get<Omf::OmfFixuppRecord::ThreadSubrecord>( sub ) };
+                        auto const&       trd  { std::get<Omf::OmfFixuppRecord::ThreadSubrecord>( sub ) };
                         FixupThreadState& slot { trd.isFrameThread ? frameThreads[trd.threadNumber & 0x03u] : targetThreads[trd.threadNumber & 0x03u] };
                         slot.isValid = true;
                         slot.method  = trd.method;
@@ -277,6 +278,7 @@ namespace {
             "Usage:\n"
             "  " << progName << " [options] <input.lib | input.obj> [...]\n\n"
             "Options:\n"
+            "  --demangle[=msc|bc|ow]       Demangle C++ symbol names (default: auto-detect when flag is given)\n"
             "  --exclude-locals             Exclude module-local symbols (LPUBDEF, LEXTDEF, LCOMDEF, local COMDAT)\n"
             "  --show-unreferenced-externs  Include EXTDEF/LEXTDEF/CEXTDEF symbols not referenced by any FIXUPP\n";
     }
@@ -291,17 +293,33 @@ int main( int argc, char* argv[] ) {
 
     bool                               excludeLocals           { };
     bool                               showUnreferencedExterns { };
+    Omf::DemangleStyle                 demangleStyle           { Omf::DemangleStyle::None };
     std::vector<std::filesystem::path> inputFiles;
 
     for ( int i { 1 }; i < argc; ++i ) {
-        std::string_view const arg{ argv[i] };
-        if ( arg == "--exclude-locals" ) {
+        std::string_view const arg { argv[i] };
+        if ( arg == "--" ) {
+            for ( int j { i + 1 }; j < argc; ++j ) {
+                inputFiles.emplace_back( argv[j] );
+            }
+            break;
+        } else if ( auto const res { Omf::ParseDemangleOption( arg, demangleStyle ) }; res == Omf::DemangleArgResult::Parsed ) {
+            continue;
+        } else if ( res == Omf::DemangleArgResult::InvalidValue ) {
+            std::cerr << std::format( "Error: Invalid demangle style in '{}' (expected msc, bc, or ow)\n\n", arg );
+            PrintUsage( argv[0] );
+            return 1;
+        } else if ( arg == "--exclude-locals" ) {
             excludeLocals = true;
         } else if ( arg == "--show-unreferenced-externs" ) {
             showUnreferencedExterns = true;
-        } else if ( ( arg == "-h" ) || ( arg == "--help" ) || ( arg == "/?" ) ) {
+        } else if ( ( arg == "-h" ) || ( arg == "--help" ) || ( arg == "/h" ) || ( arg == "/?" ) ) {
             PrintUsage( argv[0] );
             return 0;
+        } else if ( arg.starts_with( '-' ) ) {
+            std::cerr << std::format( "Error: Unknown option '{}'\n\n", arg );
+            PrintUsage( argv[0] );
+            return 1;
         } else {
             inputFiles.emplace_back( arg );
         }
@@ -316,7 +334,7 @@ int main( int argc, char* argv[] ) {
         std::map<std::string, SymbolEntry> catalog;
         std::size_t                        totalModules { };
 
-        Omf::OmfLoadOptions loadOptions{ };
+        Omf::OmfLoadOptions loadOptions { };
         loadOptions.checksumValidation = Omf::ChecksumValidation::WarnCallback;
         loadOptions.onChecksumWarning  = []( Omf::OmfChecksumWarning const& w ) {
             std::cerr << std::format(
@@ -363,11 +381,18 @@ int main( int argc, char* argv[] ) {
                 entry.referencedBy.erase( def.moduleName );
             }
 
+            std::string const displayName { Omf::DemangleSymbol( name, demangleStyle ) };
+
             if ( !entry.definitions.empty( ) ) {
-                definedRows.push_back( DefinedRow { name, FormatDefinitions( entry.definitions ), FormatReferences( entry.referencedBy ) } );
+                definedRows.push_back( DefinedRow { displayName, FormatDefinitions( entry.definitions ), FormatReferences( entry.referencedBy ) } );
             } else if ( !entry.referencedBy.empty( ) ) {
-                unresolvedRows.push_back( UnresolvedRow { name, FormatReferences( entry.referencedBy ) } );
+                unresolvedRows.push_back( UnresolvedRow { displayName, FormatReferences( entry.referencedBy ) } );
             }
+        }
+
+        if ( demangleStyle != Omf::DemangleStyle::None ) {
+            std::ranges::sort( definedRows,    { }, &DefinedRow::symbol    );
+            std::ranges::sort( unresolvedRows, { }, &UnresolvedRow::symbol );
         }
 
         std::cout << std::format(

@@ -48,7 +48,7 @@ LDFLAGS  := $(LDFLAGS_BASE) $(LDFLAGS_BUILD) $(SAN_FLAGS) $(LDFLAGS)
 LIB_STATIC  = $(LIBDIR)/libomf.a
 LIB_SHARED  = $(LIBDIR)/libomf.so
 LIB_TARGETS = $(LIB_STATIC) $(LIB_SHARED)
-LIB_OBJS    = $(OBJDIR)/OmfFile.o
+LIB_OBJS    = $(OBJDIR)/OmfFile.o $(OBJDIR)/OmfDemangle.o
 
 BIN_TARGETS = $(BINDIR)/omfcatalog $(BINDIR)/omfdump $(BINDIR)/omfedit $(BINDIR)/omfexplode
 ALL_OBJS    = $(LIB_OBJS) $(OBJDIR)/OmfCatalog.o $(OBJDIR)/OmfDump.o $(OBJDIR)/OmfEdit.o $(OBJDIR)/OmfExplode.o

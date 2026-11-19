@@ -1,4 +1,5 @@
 #include "OmfFile.h"
+#include "OmfDemangle.h"
 
 #include <cctype>
 #include <cstddef>
@@ -18,9 +19,10 @@
 namespace {
 
     struct DumpOptions {
-        bool showRawPayload { false };
-        bool expandLidata   { false };
-        bool summaryOnly    { false };
+        bool               showRawPayload { false                    };
+        bool               expandLidata   { false                    };
+        bool               summaryOnly    { false                    };
+        Omf::DemangleStyle demangleStyle  { Omf::DemangleStyle::None };
     };
 
     // Tracks 1-based OMF tables within the current module so indices in SEGDEF,
@@ -28,6 +30,12 @@ namespace {
     class ModuleContext {
 
     public:
+
+        explicit ModuleContext( Omf::DemangleStyle const demangleStyle = Omf::DemangleStyle::None ) noexcept:
+            _demangleStyle ( demangleStyle )
+        {
+            /*empty*/
+        }
 
         void Reset( ) {
             _lnames   .clear( );
@@ -106,6 +114,17 @@ namespace {
             return std::format( "#{} (\"{}\")", idx.value, ResolveNameRaw( idx ) );
         }
 
+        std::string FormatSymbolNameIndex( Omf::NameIndex const idx ) const {
+            if ( !idx.IsValid( ) ) {
+                return "0 (none)";
+            }
+            std::string const rawName { ResolveNameRaw( idx ) };
+            if ( idx.value <= _lnames.size( ) ) {
+                return std::format( "#{} (\"{}\")", idx.value, Omf::DemangleSymbol( rawName, _demangleStyle ) );
+            }
+            return std::format( "#{} (\"{}\")", idx.value, rawName );
+        }
+
         std::string FormatSegmentIndex( Omf::SegmentIndex const idx ) const {
             if ( !idx.IsValid( ) ) {
                 return "0 (none)";
@@ -131,13 +150,14 @@ namespace {
                 return "0 (none)";
             }
             if ( idx.value <= _externals.size( ) ) {
-                return std::format( "#{} (\"{}\")", idx.value, _externals[idx.value - 1u] );
+                return std::format( "#{} (\"{}\")", idx.value, Omf::DemangleSymbol( _externals[idx.value - 1u], _demangleStyle ) );
             }
             return std::format( "#{} (<unresolved ext>)", idx.value );
         }
 
     private:
 
+        Omf::DemangleStyle                                   _demangleStyle;
         std::vector<std::string>                             _lnames;
         std::vector<std::string>                             _segments;
         std::vector<std::string>                             _groups;
@@ -544,7 +564,7 @@ namespace {
                     i,
                     HexOffset( syms[i].offset, is32 ),
                     syms[i].typeIndex.value,
-                    syms[i].name
+                    Omf::DemangleSymbol( syms[i].name, opts.demangleStyle )
                 );
             }
         } else if ( auto const* ext { rec.As<Omf::OmfExtdefRecord>( ) }; ext ) {
@@ -561,7 +581,7 @@ namespace {
                     "      Ext #{:3} : Type=#{}, Name=\"{}\"\n",
                     extIdx,
                     sym.typeIndex.value,
-                    sym.name
+                    Omf::DemangleSymbol( sym.name, opts.demangleStyle )
                 );
             }
         } else if ( auto const* cext { rec.As<Omf::OmfCextdefRecord>( ) }; cext ) {
@@ -572,7 +592,7 @@ namespace {
                 std::cout << std::format(
                     "      Ext #{:3} : LogicalName={}, Type=#{}\n",
                     extIdx,
-                    ctx.FormatNameIndex( e.logicalNameIndex ),
+                    ctx.FormatSymbolNameIndex( e.logicalNameIndex ),
                     e.typeIndex.value
                 );
             }
@@ -602,7 +622,7 @@ namespace {
                     i,
                     HexOffset( syms[i].offset, is32 ),
                     syms[i].typeIndex.value,
-                    syms[i].name
+                    Omf::DemangleSymbol( syms[i].name, opts.demangleStyle )
                 );
             }
         } else if ( auto const* lin { rec.As<Omf::OmfLinnumRecord>( ) }; lin ) {
@@ -631,7 +651,7 @@ namespace {
                 "    Line entries: {}\n",
                 Hex8( linsym->GetFlags( ) ),
                 linsym->IsContinuation( ) ? "Continuation" : "First/Primary",
-                ctx.FormatNameIndex( linsym->GetSymbolNameIndex( ) ),
+                ctx.FormatSymbolNameIndex( linsym->GetSymbolNameIndex( ) ),
                 entries.size( )
             );
             for ( std::size_t i { }, limit { entries.size( ) }; i < limit; ++i ) {
@@ -714,7 +734,7 @@ namespace {
                 std::cout << std::format(
                     "      Ext #{:3} : Name=\"{}\", Type=#{}, SegType={} ({})",
                     extIdx,
-                    sym.name,
+                    Omf::DemangleSymbol( sym.name, opts.demangleStyle ),
                     sym.typeIndex.value,
                     Hex8( sym.dataSegmentType ),
                     isFar ? "FAR_COMM" : ( isNear ? "NEAR_COMM" : "SegIdx" )
@@ -739,7 +759,7 @@ namespace {
                 "    Alignment   : {}\n"
                 "    Data offset : {}\n"
                 "    Type index  : #{}\n",
-                ctx.FormatNameIndex( comdat->GetPublicNameIndex( ) ),
+                ctx.FormatSymbolNameIndex( comdat->GetPublicNameIndex( ) ),
                 Hex8( comdat->GetFlags( ) ),
                 comdat->IsContinuation( )    ? "yes" : "no",
                 comdat->IsIteratedData( )    ? "yes" : "no",
@@ -798,7 +818,7 @@ namespace {
                 "    COMDAT name : {}\n"
                 "    Location    : {}\n"
                 "    Patch count : {}\n",
-                ctx.FormatNameIndex( nbkpat->GetPublicNameIndex( ) ),
+                ctx.FormatSymbolNameIndex( nbkpat->GetPublicNameIndex( ) ),
                 GetFixupLocationName( nbkpat->GetLocationType( ) ),
                 entries.size( )
             );
@@ -817,8 +837,8 @@ namespace {
                 std::cout << std::format(
                     "      [{}] \"{}\" -> \"{}\"\n",
                     i,
-                    aliases[i].aliasName,
-                    aliases[i].substituteName
+                    Omf::DemangleSymbol( aliases[i].aliasName, opts.demangleStyle ),
+                    Omf::DemangleSymbol( aliases[i].substituteName, opts.demangleStyle )
                 );
             }
         } else if ( auto const* vernum { rec.As<Omf::OmfVernumRecord>( ) }; vernum ) {
@@ -918,7 +938,7 @@ namespace {
                 "    Block length: {}\n"
                 "    Proc flags  : {}\n"
                 "    Type index  : #{}\n",
-                blkdef->GetBlockName( ),
+                Omf::DemangleSymbol( blkdef->GetBlockName( ), opts.demangleStyle ),
                 ctx.FormatGroupIndex( blkdef->GetBaseGroup( ) ),
                 ctx.FormatSegmentIndex( blkdef->GetBaseSegment( ) ),
                 HexOffset( blkdef->GetBlockOffset( ), is32 ),
@@ -939,7 +959,7 @@ namespace {
                     i,
                     Hex16( static_cast<std::uint16_t>( syms[i].offset ) ),
                     syms[i].typeIndex.value,
-                    syms[i].name
+                    Omf::DemangleSymbol( syms[i].name, opts.demangleStyle )
                 );
             }
         } else if ( auto const* pedata { rec.As<Omf::OmfPedataRecord>( ) }; pedata ) {
@@ -993,7 +1013,7 @@ namespace {
             for ( std::size_t g { }, limit { groups.size( ) }; g < limit; ++g ) {
                 std::cout << std::format( "      Module [{}] ({} symbol(s)):\n", g, groups[g].size( ) );
                 for ( auto const& sym : groups[g] ) {
-                    std::cout << std::format( "        - \"{}\"\n", sym );
+                    std::cout << std::format( "        - \"{}\"\n", Omf::DemangleSymbol( sym, opts.demangleStyle ) );
                 }
             }
         } else if ( auto const* mshdr { rec.As<Omf::OmfMsLibHeaderRecord>( ) }; mshdr ) {
@@ -1027,9 +1047,10 @@ namespace {
             "Usage:\n"
             "  {} <input.obj|input.lib>... [options]\n\n"
             "Options:\n"
-            "  --raw            Hex-dump the raw interior payload bytes of every record\n"
-            "  --expand-lidata  Expand repeating LIDATA blocks and hex-dump the expanded bytes\n"
-            "  --summary        Print only the 1-line header summary for each record\n",
+            "  --demangle[=msc|bc|ow]  Demangle C++ symbol names (default: auto-detect when flag is given)\n"
+            "  --raw                   Hex-dump the raw interior payload bytes of every record\n"
+            "  --expand-lidata         Expand repeating LIDATA blocks and hex-dump the expanded bytes\n"
+            "  --summary               Print only the 1-line header summary for each record\n",
             progName
         );
     }
@@ -1043,7 +1064,7 @@ int main( int argc, char* argv[] ) {
     }
 
     std::vector<std::filesystem::path> inputPaths;
-    DumpOptions                        opts        { };
+    DumpOptions                        opts { };
 
     for ( int i { 1 }; i < argc; ++i ) {
         std::string_view const arg { argv[i] };
@@ -1052,6 +1073,12 @@ int main( int argc, char* argv[] ) {
                 inputPaths.emplace_back( argv[j] );
             }
             break;
+        } else if ( auto const res { Omf::ParseDemangleOption( arg, opts.demangleStyle ) }; res == Omf::DemangleArgResult::Parsed ) {
+            continue;
+        } else if ( res == Omf::DemangleArgResult::InvalidValue ) {
+            std::cerr << std::format( "Error: Invalid demangle style in '{}' (expected msc, bc, or ow)\n\n", arg );
+            PrintUsage( argv[0] );
+            return 1;
         } else if ( arg == "--raw" ) {
             opts.showRawPayload = true;
         } else if ( arg == "--expand-lidata" ) {
@@ -1075,7 +1102,7 @@ int main( int argc, char* argv[] ) {
         return 1;
     }
 
-    int exitCode { };
+    int  exitCode    { };
     bool skipNewLine { };
 
     for ( std::size_t fileIdx { }, limit { inputPaths.size( ) }; fileIdx < limit; ++fileIdx ) {
@@ -1102,7 +1129,7 @@ int main( int argc, char* argv[] ) {
                 modules.size( )
             );
 
-            ModuleContext ctx;
+            ModuleContext ctx         { opts.demangleStyle };
             std::size_t   fileOffset  { };
             std::size_t   moduleIndex { };
 
