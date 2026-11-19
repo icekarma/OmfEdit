@@ -339,9 +339,9 @@ namespace {
 
     std::string FormatFrameMethod( std::uint8_t const method, std::uint16_t const datum, ModuleContext const& ctx ) {
         switch ( method & 0x07u ) {
-            case 0:  return "F0: Segment "  + ctx.FormatSegmentIndex( Omf::SegmentIndex{ datum } );
-            case 1:  return "F1: Group "    + ctx.FormatGroupIndex( Omf::GroupIndex{ datum } );
-            case 2:  return "F2: External " + ctx.FormatExternalIndex( Omf::ExternalIndex{ datum } );
+            case 0:  return "F0: Segment "  + ctx.FormatSegmentIndex( Omf::SegmentIndex { datum } );
+            case 1:  return "F1: Group "    + ctx.FormatGroupIndex( Omf::GroupIndex { datum } );
+            case 2:  return "F2: External " + ctx.FormatExternalIndex( Omf::ExternalIndex { datum } );
             case 3:  return "F3: Explicit Frame " + Hex16( datum );
             case 4:  return "F4: Location Segment (inferred from data record)";
             case 5:  return "F5: Target's Frame (determined by target)";
@@ -351,9 +351,9 @@ namespace {
 
     std::string FormatTargetMethod( std::uint8_t const method, std::uint16_t const datum, ModuleContext const& ctx ) {
         switch ( method & 0x03u ) {
-            case 0:  return std::format( "T{}: Segment {}",        method, ctx.FormatSegmentIndex( Omf::SegmentIndex{ datum } ) );
-            case 1:  return std::format( "T{}: Group {}",          method, ctx.FormatGroupIndex( Omf::GroupIndex{ datum } ) );
-            case 2:  return std::format( "T{}: External {}",       method, ctx.FormatExternalIndex( Omf::ExternalIndex{ datum } ) );
+            case 0:  return std::format( "T{}: Segment {}",        method, ctx.FormatSegmentIndex( Omf::SegmentIndex { datum } ) );
+            case 1:  return std::format( "T{}: Group {}",          method, ctx.FormatGroupIndex( Omf::GroupIndex { datum } ) );
+            case 2:  return std::format( "T{}: External {}",       method, ctx.FormatExternalIndex( Omf::ExternalIndex { datum } ) );
             case 3:  return std::format( "T{}: Explicit Frame {}", method, Hex16( datum ) );
             default: return "Unknown Target";
         }
@@ -1114,9 +1114,9 @@ int main( int argc, char* argv[] ) {
         skipNewLine = false;
 
         try {
-            Omf::OmfFile const omfFile { Omf::OmfFile::LoadFromFile( inputPath ) };
-            auto const         records { omfFile.GetRecords( ) };
-            auto const&        modules { omfFile.GetModules( ) };
+            Omf::OmfFile const  omfFile { Omf::OmfFile::LoadFromFile( inputPath ) };
+            auto         const  records { omfFile.GetRecords( ) };
+            auto         const& modules { omfFile.GetModules( ) };
 
             std::cout << std::format(
                 "=============================================================================\n"

@@ -102,7 +102,7 @@ namespace {
         std::string_view      fallbackFileName
     ) {
         if ( auto const rawName { module.GetModuleName( ) }; rawName && !rawName->empty( ) ) {
-            return std::string{ *rawName };
+            return std::string { *rawName };
         }
         if ( !fallbackFileName.empty( ) ) {
             return std::format( "{}#{}", fallbackFileName, moduleIndex );
@@ -149,13 +149,13 @@ namespace {
                 }
                 DefinitionKind const kind { pub->IsLocal( ) ? DefinitionKind::Lpubdef : DefinitionKind::Pubdef };
                 for ( auto const& sym : pub->GetSymbols( ) ) {
-                    catalog[sym.name].definitions.insert( SymbolDefinition{ moduleName, kind } );
+                    catalog[sym.name].definitions.insert( SymbolDefinition { moduleName, kind } );
                 }
             }
             // 2. EXTDEF / LEXTDEF (0x8C, 0xB4, 0xB5)
             else if ( auto const* ext { recordPtr->As<Omf::OmfExtdefRecord>( ) } ) {
                 for ( auto const& sym : ext->GetSymbols( ) ) {
-                    externalSlots.push_back( ExternalSlot{ sym.name, ext->IsLocal( ) } );
+                    externalSlots.push_back( ExternalSlot { sym.name, ext->IsLocal( ) } );
                 }
             }
             // 3. CEXTDEF (0xBC)
@@ -163,7 +163,7 @@ namespace {
                 for ( auto const& ext : cext->GetExternals( ) ) {
                     std::string const resolvedName { module.ResolveName( ext.logicalNameIndex ).value_or( "" ) };
                     bool const        isLocal      { localNameIndices.contains( ext.logicalNameIndex.value )   };
-                    externalSlots.push_back( ExternalSlot{ resolvedName, isLocal } );
+                    externalSlots.push_back( ExternalSlot { resolvedName, isLocal } );
                 }
             }
             // 4. COMDAT / COMDAT32 (0xC2, 0xC3)
@@ -173,23 +173,23 @@ namespace {
                 }
                 if ( auto const resolved { module.ResolveName( comdat->GetPublicNameIndex( ) ) } ) {
                     DefinitionKind const kind { comdat->IsLocalSymbol( ) ? DefinitionKind::LocalComdat : DefinitionKind::Comdat };
-                    catalog[std::string{ *resolved }].definitions.insert( SymbolDefinition{ moduleName, kind } );
+                    catalog[std::string { *resolved }].definitions.insert( SymbolDefinition { moduleName, kind } );
                 }
             }
             // 5. COMDEF / LCOMDEF (0xB0, 0xB8)
             else if ( auto const* comdef { recordPtr->As<Omf::OmfComdefRecord>( ) } ) {
                 DefinitionKind const kind { comdef->IsLocal( ) ? DefinitionKind::Lcomdef : DefinitionKind::Comdef };
                 for ( auto const& sym : comdef->GetSymbols( ) ) {
-                    externalSlots.push_back( ExternalSlot{ sym.name, comdef->IsLocal( ) } );
+                    externalSlots.push_back( ExternalSlot { sym.name, comdef->IsLocal( ) } );
                     if ( !comdef->IsLocal( ) || !excludeLocals ) {
-                        catalog[sym.name].definitions.insert( SymbolDefinition{ moduleName, kind } );
+                        catalog[sym.name].definitions.insert( SymbolDefinition { moduleName, kind } );
                     }
                 }
             }
             // 6. ALIAS (0xC6)
             else if ( auto const* alias { recordPtr->As<Omf::OmfAliasRecord>( ) } ) {
                 for ( auto const& item : alias->GetAliases( ) ) {
-                    catalog[item.aliasName].definitions.insert( SymbolDefinition{ moduleName, DefinitionKind::Alias } );
+                    catalog[item.aliasName].definitions.insert( SymbolDefinition { moduleName, DefinitionKind::Alias } );
                     catalog[item.substituteName].referencedBy.insert( moduleName );
                 }
             }

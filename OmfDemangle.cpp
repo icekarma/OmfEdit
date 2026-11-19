@@ -187,9 +187,9 @@ namespace Omf {
                 }
 
                 if ( specialKind == SpecialNameKind::Constructor ) {
-                    baseName = scopes.empty( ) ? std::string{ "ctor" } : scopes.front( );
+                    baseName = scopes.empty( ) ? std::string { "ctor" } : scopes.front( );
                 } else if ( specialKind == SpecialNameKind::Destructor ) {
-                    baseName = scopes.empty( ) ? std::string{ "~dtor" } : ( "~" + scopes.front( ) );
+                    baseName = scopes.empty( ) ? std::string { "~dtor" } : ( "~" + scopes.front( ) );
                 }
 
                 std::string const qualifiedName { JoinQualifiedScopesReversed( scopes, baseName ) };
@@ -266,7 +266,7 @@ namespace Omf {
                 if ( _options.includeCallingConv ) {
                     return std::format( "{} {}", isStdcall ? "__stdcall" : "__fastcall", namePart );
                 }
-                return std::string{ namePart };
+                return std::string { namePart };
             }
 
             void _AddNameBackref( std::string const& name ) {
@@ -719,7 +719,7 @@ namespace Omf {
                     out += "__far ";
                 }
                 if ( _options.includeCallingConv && !callingConv.empty( ) ) {
-                    out += std::string{ callingConv } + " ";
+                    out += std::string { callingConv } + " ";
                 }
                 out += displayName;
                 out += "(";
@@ -822,7 +822,7 @@ namespace Omf {
                         ptrSpec += "__far ";
                     }
                     if ( _options.includeCallingConv && !cc.empty( ) ) {
-                        ptrSpec += std::string{ cc } + " ";
+                        ptrSpec += std::string { cc } + " ";
                     }
                     ptrSpec += "*";
                     if ( !ptrTopQual.empty( ) ) {
@@ -867,7 +867,7 @@ namespace Omf {
 
                     std::string ptrSpec;
                     if ( _options.includeCallingConv && !cc.empty( ) ) {
-                        ptrSpec += std::string{ cc } + " ";
+                        ptrSpec += std::string { cc } + " ";
                     }
                     ptrSpec += clsName + "::*";
                     outType = std::format( "{} ({})({})", retType, ptrSpec, params );
@@ -1136,7 +1136,7 @@ namespace Omf {
                 std::string leaf { std::move( parts.back( ) ) };
                 parts.pop_back( );
 
-                std::string const enclosingClass { parts.empty( ) ? std::string{ } : parts.back( ) };
+                std::string const enclosingClass { parts.empty( ) ? std::string { } : parts.back( ) };
                 std::string       displayLeaf;
                 if ( !leaf.empty( ) && ( leaf.front( ) == '$' ) ) {
                     if ( !_DecodeSpecialName( leaf, enclosingClass, displayLeaf ) ) {
@@ -1189,7 +1189,7 @@ namespace Omf {
 
                 std::string out;
                 if ( _options.includeCallingConv && !callingConv.empty( ) ) {
-                    out += std::string{ callingConv } + " ";
+                    out += std::string { callingConv } + " ";
                 }
                 out += qualifiedName;
                 out += "(";
@@ -1272,11 +1272,11 @@ namespace Omf {
 
             bool _DecodeSpecialName( std::string_view const special, std::string_view const enclosingClass, std::string& outName ) {
                 if ( ( special == "$bctr" ) || ( special == "$bctr1" ) || ( special == "$bctr2" ) ) {
-                    outName = enclosingClass.empty( ) ? std::string{ "ctor" } : std::string{ enclosingClass };
+                    outName = enclosingClass.empty( ) ? std::string { "ctor" } : std::string { enclosingClass };
                     return true;
                 }
                 if ( special == "$bdtr" ) {
-                    outName = enclosingClass.empty( ) ? std::string{ "~dtor" } : ( "~" + std::string{ enclosingClass } );
+                    outName = enclosingClass.empty( ) ? std::string { "~dtor" } : ( "~" + std::string { enclosingClass } );
                     return true;
                 }
 
@@ -1299,7 +1299,7 @@ namespace Omf {
                     std::string_view name;
                 };
 
-                static constexpr std::array<OpEntry, 40> kOps {{
+                static constexpr std::array<OpEntry, 40> kOps { {
                     { "$bnew",  "operator new"      },
                     { "$bdele", "operator delete"   },
                     { "$bnwa",  "operator new[]"    },
@@ -1340,11 +1340,11 @@ namespace Omf {
                     { "$brls",  "operator<<="       },
                     { "$brrs",  "operator>>="       },
                     { "$bads",  "operator->*"       }
-                }};
+                } };
 
                 for ( auto const& entry : kOps ) {
                     if ( special == entry.code ) {
-                        outName = std::string{ entry.name };
+                        outName = std::string { entry.name };
                         return true;
                     }
                 }
@@ -1632,9 +1632,9 @@ namespace Omf {
                 }
 
                 if ( specialKind == SpecialNameKind::Constructor ) {
-                    baseName = scopes.empty( ) ? std::string{ "ctor" } : scopes.front( );
+                    baseName = scopes.empty( ) ? std::string { "ctor" } : scopes.front( );
                 } else if ( specialKind == SpecialNameKind::Destructor ) {
-                    baseName = scopes.empty( ) ? std::string{ "~dtor" } : ( "~" + scopes.front( ) );
+                    baseName = scopes.empty( ) ? std::string { "~dtor" } : ( "~" + scopes.front( ) );
                 }
 
                 std::string const qualifiedName { JoinQualifiedScopesReversed( scopes, baseName ) };
@@ -1792,7 +1792,7 @@ namespace Omf {
                     std::string_view name;
                 };
 
-                static constexpr std::array<OpEntry, 44> kOps {{
+                static constexpr std::array<OpEntry, 44> kOps { {
                     { "nw",  "operator new"      },
                     { "dl",  "operator delete"   },
                     { "na",  "operator new[]"    },
@@ -1837,11 +1837,11 @@ namespace Omf {
                     { "ix",  "operator[]"        },
                     { "vt",  "`vftable'"         },
                     { "vb",  "`vbtable'"         }
-                }};
+                } };
 
                 for ( auto const& entry : kOps ) {
                     if ( code == entry.code ) {
-                        outName = std::string{ entry.name };
+                        outName = std::string { entry.name };
                         return true;
                     }
                 }
@@ -2138,7 +2138,7 @@ namespace Omf {
 
     DemangleResult DemangleSymbolDetailed( std::string_view const symbol, DemangleOptions const& options ) {
         if ( ( options.style == DemangleStyle::None ) || symbol.empty( ) ) {
-            return DemangleResult{ std::string{ symbol }, DemangleStyle::None, false };
+            return DemangleResult { std::string { symbol }, DemangleStyle::None, false };
         }
 
         DemangleStyle const targetStyle { ( options.style == DemangleStyle::Auto ) ? DetectManglingStyle( symbol ) : options.style }; 

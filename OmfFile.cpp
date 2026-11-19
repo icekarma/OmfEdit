@@ -24,17 +24,17 @@ namespace Omf {
         public:
 
             OmfBinaryReader( std::span<std::byte const> const buffer, RecordType const recordType, std::size_t const baseFileOffset = 0 ) noexcept:
-                _buffer         ( buffer         ),
-                _position       ( 0              ),
-                _recordType     ( recordType     ),
-                _baseFileOffset ( baseFileOffset )
+                _buffer         { buffer         },
+                _position       { 0              },
+                _recordType     { recordType     },
+                _baseFileOffset { baseFileOffset }
             {
                 /*empty*/
             }
 
-            bool        IsAtEnd( ) const noexcept           { return _position >= _buffer.size( ); }
+            bool        IsAtEnd( )           const noexcept { return _position >= _buffer.size( ); }
             std::size_t GetRemainingCount( ) const noexcept { return _buffer.size( ) - _position;  }
-            std::size_t GetPosition( ) const noexcept       { return _position;                    }
+            std::size_t GetPosition( )       const noexcept { return _position;                    }
 
             std::uint8_t PeekUInt8( ) const {
                 _EnsureAvailable( 1 );
@@ -89,7 +89,7 @@ namespace Omf {
 
             template <typename Tag>
             OmfIndex<Tag> ReadIndex( ) {
-                return OmfIndex<Tag>{ ReadRawIndex( ) };
+                return OmfIndex<Tag> { ReadRawIndex( ) };
             }
 
             // OMF 1-byte length-prefixed string
@@ -377,9 +377,9 @@ namespace Omf {
     //=========================================================================
 
     OmfChecksumException::OmfChecksumException( std::size_t const fileOffset, RecordType const recordType, std::uint8_t const expectedChecksum, std::uint8_t const actualChecksum ):
-        OmfParseException ( std::format( "OMF record checksum mismatch at offset {}", fileOffset ), fileOffset, recordType ),
-        _expectedChecksum ( expectedChecksum                                                                               ),
-        _actualChecksum   ( actualChecksum                                                                                 )
+        OmfParseException { std::format( "OMF record checksum mismatch at offset {}", fileOffset ), fileOffset, recordType },
+        _expectedChecksum { expectedChecksum                                                                               },
+        _actualChecksum   { actualChecksum                                                                                 }
     {
         /*empty*/
     }
@@ -389,20 +389,20 @@ namespace Omf {
     //=========================================================================
 
     OmfRecord::OmfRecord( RecordType const type ) noexcept:
-        _recordType       ( type  ),
-        _isDirty          ( true  ),
-        _originalChecksum ( 0     ),
-        _hadValidChecksum ( true  )
+        _recordType       { type  },
+        _isDirty          { true  },
+        _originalChecksum { 0     },
+        _hadValidChecksum { true  }
     {
         /*empty*/
     }
 
     OmfRecord::OmfRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        _recordType       ( type                                   ),
-        _isDirty          ( false                                  ),
-        _originalChecksum ( originalChecksum                       ),
-        _hadValidChecksum ( hadValidChecksum                       ),
-        _rawPayloadCache  ( rawPayload.begin( ), rawPayload.end( ) )
+        _recordType       { type                                   },
+        _isDirty          { false                                  },
+        _originalChecksum { originalChecksum                       },
+        _hadValidChecksum { hadValidChecksum                       },
+        _rawPayloadCache  { rawPayload.begin( ), rawPayload.end( ) }
     {
         /*empty*/
     }
@@ -497,15 +497,15 @@ namespace Omf {
     //=========================================================================
 
     OmfUnknownRecord::OmfUnknownRecord( RecordType const type, std::vector<std::byte> const payload ):
-        OmfRecord ( type                 ),
-        _payload  ( std::move( payload ) )
+        OmfRecord { type                 },
+        _payload  { std::move( payload ) }
     {
         /*empty*/
     }
 
     OmfUnknownRecord::OmfUnknownRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum ),
-        _payload  ( rawPayload.begin( ), rawPayload.end( )               )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum },
+        _payload  { rawPayload.begin( ), rawPayload.end( )               }
     {
         /*empty*/
     }
@@ -532,14 +532,14 @@ namespace Omf {
     //=========================================================================
 
     OmfHeaderRecord::OmfHeaderRecord( std::string const moduleName, bool const isLibraryHeader ):
-        OmfRecord   ( isLibraryHeader ? RecordType::Lheadr : RecordType::Theadr ),
-        _moduleName ( std::move( moduleName )                                   )
+        OmfRecord   { isLibraryHeader ? RecordType::Lheadr : RecordType::Theadr },
+        _moduleName { std::move( moduleName )                                   }
     {
         /*empty*/
     }
 
     OmfHeaderRecord::OmfHeaderRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _moduleName = reader.ReadString( );
@@ -571,17 +571,17 @@ namespace Omf {
     //=========================================================================
 
     OmfComentRecord::OmfComentRecord( bool const noPurge, bool const noList, std::uint8_t const commentClass, std::vector<std::byte> const commentData ):
-        OmfRecord     ( RecordType::Coment       ),
-        _noPurge      ( noPurge                  ),
-        _noList       ( noList                   ),
-        _commentClass ( commentClass             ),
-        _commentData  ( std::move( commentData ) )
+        OmfRecord     { RecordType::Coment       },
+        _noPurge      { noPurge                  },
+        _noList       { noList                   },
+        _commentClass { commentClass             },
+        _commentData  { std::move( commentData ) }
     {
         /*empty*/
     }
 
     OmfComentRecord::OmfComentRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Coment, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Coment, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader    reader( rawPayload, RecordType::Coment );
         std::uint8_t const typeByte { reader.ReadUInt8( ) };
@@ -640,15 +640,15 @@ namespace Omf {
     //=========================================================================
 
     OmfModendRecord::OmfModendRecord( bool const isMainModule, bool const is32Bit ):
-        OmfRecord     ( is32Bit ? RecordType::Modend32 : RecordType::Modend ),
-        _isMainModule ( isMainModule                                        ),
-        _startAddress ( std::monostate{ }                                   )
+        OmfRecord     { is32Bit ? RecordType::Modend32 : RecordType::Modend },
+        _isMainModule { isMainModule                                        },
+        _startAddress { std::monostate { }                                  }
     {
         /*empty*/
     }
 
     OmfModendRecord::OmfModendRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader    reader( rawPayload, type );
         std::uint8_t const modType       { reader.ReadUInt8( )        };
@@ -712,13 +712,13 @@ namespace Omf {
     //=========================================================================
 
     OmfExtdefRecord::OmfExtdefRecord( RecordType const type ):
-        OmfRecord ( type )
+        OmfRecord { type }
     {
         /*empty*/
     }
 
     OmfExtdefRecord::OmfExtdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         while ( !reader.IsAtEnd( ) ) {
@@ -789,13 +789,13 @@ namespace Omf {
     //=========================================================================
 
     OmfCextdefRecord::OmfCextdefRecord( ):
-        OmfRecord ( RecordType::Cextdef )
+        OmfRecord { RecordType::Cextdef }
     {
         /*empty*/
     }
 
     OmfCextdefRecord::OmfCextdefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Cextdef, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Cextdef, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Cextdef );
         while ( !reader.IsAtEnd( ) ) {
@@ -834,13 +834,13 @@ namespace Omf {
     //=========================================================================
 
     OmfTypdefRecord::OmfTypdefRecord( ):
-        OmfRecord ( RecordType::Typdef )
+        OmfRecord { RecordType::Typdef }
     {
         /*empty*/
     }
 
     OmfTypdefRecord::OmfTypdefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Typdef, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Typdef, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Typdef );
         _typeName          = reader.ReadString( );
@@ -875,13 +875,13 @@ namespace Omf {
     //=========================================================================
 
     OmfPubdefRecord::OmfPubdefRecord( RecordType const type ):
-        OmfRecord ( type )
+        OmfRecord { type }
     {
         /*empty*/
     }
 
     OmfPubdefRecord::OmfPubdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _baseGroup   = reader.ReadIndex<GroupIndexTag>( );
@@ -992,13 +992,13 @@ namespace Omf {
     //=========================================================================
 
     OmfLocsymRecord::OmfLocsymRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Locsym32 : RecordType::Locsym )
+        OmfRecord { is32Bit ? RecordType::Locsym32 : RecordType::Locsym }
     {
         /*empty*/
     }
 
     OmfLocsymRecord::OmfLocsymRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _baseGroup   = reader.ReadIndex<GroupIndexTag>( );
@@ -1083,13 +1083,13 @@ namespace Omf {
     //=========================================================================
 
     OmfLinnumRecord::OmfLinnumRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Linnum32 : RecordType::Linnum )
+        OmfRecord { is32Bit ? RecordType::Linnum32 : RecordType::Linnum }
     {
         /*empty*/
     }
 
     OmfLinnumRecord::OmfLinnumRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _baseGroup   = reader.ReadIndex<GroupIndexTag>( );
@@ -1150,13 +1150,13 @@ namespace Omf {
     //=========================================================================
 
     OmfLinsymRecord::OmfLinsymRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Linsym32 : RecordType::Linsym )
+        OmfRecord { is32Bit ? RecordType::Linsym32 : RecordType::Linsym }
     {
         /*empty*/
     }
 
     OmfLinsymRecord::OmfLinsymRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _flags           = reader.ReadUInt8( );
@@ -1212,13 +1212,13 @@ namespace Omf {
     //=========================================================================
 
     OmfLnamesRecord::OmfLnamesRecord( bool const isLocal ):
-        OmfRecord ( isLocal ? RecordType::Llnames : RecordType::Lnames )
+        OmfRecord { isLocal ? RecordType::Llnames : RecordType::Lnames }
     {
         /*empty*/
     }
 
     OmfLnamesRecord::OmfLnamesRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         while ( !reader.IsAtEnd( ) ) {
@@ -1281,13 +1281,13 @@ namespace Omf {
     //=========================================================================
 
     OmfSegdefRecord::OmfSegdefRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Segdef32 : RecordType::Segdef )
+        OmfRecord { is32Bit ? RecordType::Segdef32 : RecordType::Segdef }
     {
         /*empty*/
     }
 
     OmfSegdefRecord::OmfSegdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader    reader( rawPayload, type );
         std::uint8_t const acbp { reader.ReadUInt8( ) };
@@ -1407,14 +1407,14 @@ namespace Omf {
     //=========================================================================
 
     OmfGrpdefRecord::OmfGrpdefRecord( NameIndex const groupNameIndex ):
-        OmfRecord       ( RecordType::Grpdef ),
-        _groupNameIndex ( groupNameIndex     )
+        OmfRecord       { RecordType::Grpdef },
+        _groupNameIndex { groupNameIndex     }
     {
         /*empty*/
     }
 
     OmfGrpdefRecord::OmfGrpdefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Grpdef, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Grpdef, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Grpdef );
         _groupNameIndex = reader.ReadIndex<NameIndexTag>( );
@@ -1462,13 +1462,13 @@ namespace Omf {
     //=========================================================================
 
     OmfFixuppRecord::OmfFixuppRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Fixupp32 : RecordType::Fixupp )
+        OmfRecord { is32Bit ? RecordType::Fixupp32 : RecordType::Fixupp }
     {
         /*empty*/
     }
 
     OmfFixuppRecord::OmfFixuppRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         while ( !reader.IsAtEnd( ) ) {
@@ -1554,16 +1554,16 @@ namespace Omf {
     //=========================================================================
 
     OmfLedataRecord::OmfLedataRecord( SegmentIndex const segmentIndex, std::uint32_t const dataOffset, std::vector<std::byte> const data, bool const is32Bit ):
-        OmfRecord     ( is32Bit ? RecordType::Ledata32 : RecordType::Ledata ),
-        _segmentIndex ( segmentIndex                                        ),
-        _dataOffset   ( dataOffset                                          ),
-        _data         ( std::move( data )                                   )
+        OmfRecord     { is32Bit ? RecordType::Ledata32 : RecordType::Ledata },
+        _segmentIndex { segmentIndex                                        },
+        _dataOffset   { dataOffset                                          },
+        _data         { std::move( data )                                   }
     {
         /*empty*/
     }
 
     OmfLedataRecord::OmfLedataRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _segmentIndex = reader.ReadIndex<SegmentIndexTag>( );
@@ -1611,13 +1611,13 @@ namespace Omf {
     //=========================================================================
 
     OmfLidataRecord::OmfLidataRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Lidata32 : RecordType::Lidata )
+        OmfRecord { is32Bit ? RecordType::Lidata32 : RecordType::Lidata }
     {
         /*empty*/
     }
 
     OmfLidataRecord::OmfLidataRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _segmentIndex = reader.ReadIndex<SegmentIndexTag>( );
@@ -1677,13 +1677,13 @@ namespace Omf {
     //=========================================================================
 
     OmfComdefRecord::OmfComdefRecord( bool const isLocal ):
-        OmfRecord ( isLocal ? RecordType::Lcomdef : RecordType::Comdef )
+        OmfRecord { isLocal ? RecordType::Lcomdef : RecordType::Comdef }
     {
         /*empty*/
     }
 
     OmfComdefRecord::OmfComdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         while ( !reader.IsAtEnd( ) ) {
@@ -1752,13 +1752,13 @@ namespace Omf {
     //=========================================================================
 
     OmfBakpatRecord::OmfBakpatRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Bakpat32 : RecordType::Bakpat )
+        OmfRecord { is32Bit ? RecordType::Bakpat32 : RecordType::Bakpat }
     {
         /*empty*/
     }
 
     OmfBakpatRecord::OmfBakpatRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _segmentIndex = reader.ReadIndex<SegmentIndexTag>( );
@@ -1814,13 +1814,13 @@ namespace Omf {
     //=========================================================================
 
     OmfNbkpatRecord::OmfNbkpatRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Nbkpat32 : RecordType::Nbkpat )
+        OmfRecord { is32Bit ? RecordType::Nbkpat32 : RecordType::Nbkpat }
     {
         /*empty*/
     }
 
     OmfNbkpatRecord::OmfNbkpatRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _locationType    = static_cast<FixupLocationType>( reader.ReadUInt8( ) );
@@ -1876,13 +1876,13 @@ namespace Omf {
     //=========================================================================
 
     OmfComdatRecord::OmfComdatRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Comdat32 : RecordType::Comdat )
+        OmfRecord { is32Bit ? RecordType::Comdat32 : RecordType::Comdat }
     {
         /*empty*/
     }
 
     OmfComdatRecord::OmfComdatRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader    reader( rawPayload, type );
         _flags                  = reader.ReadUInt8( );
@@ -2030,13 +2030,13 @@ namespace Omf {
     //=========================================================================
 
     OmfAliasRecord::OmfAliasRecord( ):
-        OmfRecord ( RecordType::Alias )
+        OmfRecord { RecordType::Alias }
     {
         /*empty*/
     }
 
     OmfAliasRecord::OmfAliasRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Alias, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Alias, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Alias );
         while ( !reader.IsAtEnd( ) ) {
@@ -2093,14 +2093,14 @@ namespace Omf {
     //=========================================================================
 
     OmfVernumRecord::OmfVernumRecord( std::string const version ):
-        OmfRecord ( RecordType::Vernum   ),
-        _version  ( std::move( version ) )
+        OmfRecord { RecordType::Vernum   },
+        _version  { std::move( version ) }
     {
         /*empty*/
     }
 
     OmfVernumRecord::OmfVernumRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Vernum, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Vernum, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Vernum );
         _version = reader.ReadString( );
@@ -2167,13 +2167,13 @@ namespace Omf {
     //=========================================================================
 
     OmfRheadrRecord::OmfRheadrRecord( ):
-        OmfRecord ( RecordType::Rheadr )
+        OmfRecord { RecordType::Rheadr }
     {
         /*empty*/
     }
 
     OmfRheadrRecord::OmfRheadrRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Rheadr, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Rheadr, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Rheadr );
         _moduleName = reader.ReadString( );
@@ -2216,13 +2216,13 @@ namespace Omf {
 
     // REGINT (0x70)
     OmfRegintRecord::OmfRegintRecord( ):
-        OmfRecord ( RecordType::Regint )
+        OmfRecord { RecordType::Regint }
     {
         /*empty*/
     }
 
     OmfRegintRecord::OmfRegintRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Regint, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Regint, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Regint );
         while ( !reader.IsAtEnd( ) ) {
@@ -2277,13 +2277,13 @@ namespace Omf {
 
     // REDATA (0x72)
     OmfRedataRecord::OmfRedataRecord( ):
-        OmfRecord ( RecordType::Redata )
+        OmfRecord { RecordType::Redata }
     {
         /*empty*/
     }
 
     OmfRedataRecord::OmfRedataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Redata, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Redata, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Redata );
         _baseSpec = reader.ReadFixupTargetSpec( false );
@@ -2313,13 +2313,13 @@ namespace Omf {
 
     // RIDATA (0x74)
     OmfRidataRecord::OmfRidataRecord( ):
-        OmfRecord ( RecordType::Ridata )
+        OmfRecord { RecordType::Ridata }
     {
         /*empty*/
     }
 
     OmfRidataRecord::OmfRidataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Ridata, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Ridata, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Ridata );
         _baseSpec = reader.ReadFixupTargetSpec( false );
@@ -2353,13 +2353,13 @@ namespace Omf {
 
     // OVLDEF (0x76)
     OmfOvldefRecord::OmfOvldefRecord( ):
-        OmfRecord ( RecordType::Ovldef )
+        OmfRecord { RecordType::Ovldef }
     {
         /*empty*/
     }
 
     OmfOvldefRecord::OmfOvldefRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Ovldef, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Ovldef, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Ovldef );
         _overlayName        = reader.ReadString( );
@@ -2408,14 +2408,14 @@ namespace Omf {
 
     // ENDREC (0x78)
     OmfEndrecRecord::OmfEndrecRecord( EndType const endType ):
-        OmfRecord ( RecordType::Endrec ),
-        _endType  ( endType            )
+        OmfRecord { RecordType::Endrec },
+        _endType  { endType            }
     {
         /*empty*/
     }
 
     OmfEndrecRecord::OmfEndrecRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Endrec, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Endrec, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Endrec );
         _endType = static_cast<EndType>( reader.ReadUInt8( ) );
@@ -2440,13 +2440,13 @@ namespace Omf {
 
     // BLKDEF (0x7A / 0x7B)
     OmfBlkdefRecord::OmfBlkdefRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Blkdef32 : RecordType::Blkdef )
+        OmfRecord { is32Bit ? RecordType::Blkdef32 : RecordType::Blkdef }
     {
         /*empty*/
     }
 
     OmfBlkdefRecord::OmfBlkdefRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, type );
         _baseGroup   = reader.ReadIndex<GroupIndexTag>( );
@@ -2543,13 +2543,13 @@ namespace Omf {
 
     // BLKEND (0x7C / 0x7D)
     OmfBlkendRecord::OmfBlkendRecord( bool const is32Bit ):
-        OmfRecord ( is32Bit ? RecordType::Blkend32 : RecordType::Blkend )
+        OmfRecord { is32Bit ? RecordType::Blkend32 : RecordType::Blkend }
     {
         /*empty*/
     }
 
     OmfBlkendRecord::OmfBlkendRecord( RecordType const type, std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( type, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { type, rawPayload, originalChecksum, hadValidChecksum }
     {
         /*empty*/
     }
@@ -2568,13 +2568,13 @@ namespace Omf {
 
     // DEBSYM (0x7E)
     OmfDebsymRecord::OmfDebsymRecord( ):
-        OmfRecord ( RecordType::Debsym )
+        OmfRecord { RecordType::Debsym }
     {
         /*empty*/
     }
 
     OmfDebsymRecord::OmfDebsymRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Debsym, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Debsym, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Debsym );
         _frameMethod = reader.ReadUInt8( );
@@ -2637,16 +2637,16 @@ namespace Omf {
 
     // PEDATA (0x84)
     OmfPedataRecord::OmfPedataRecord( std::uint16_t const frameNumber, std::uint8_t const offset, std::vector<std::byte> const data ):
-        OmfRecord    ( RecordType::Pedata ),
-        _frameNumber ( frameNumber        ),
-        _offset      ( offset             ),
-        _data        ( std::move( data )  )
+        OmfRecord    { RecordType::Pedata },
+        _frameNumber { frameNumber        },
+        _offset      { offset             },
+        _data        { std::move( data )  }
     {
         /*empty*/
     }
 
     OmfPedataRecord::OmfPedataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Pedata, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Pedata, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Pedata );
         _frameNumber = reader.ReadUInt16( );
@@ -2687,13 +2687,13 @@ namespace Omf {
 
     // PIDATA (0x86)
     OmfPidataRecord::OmfPidataRecord( ):
-        OmfRecord ( RecordType::Pidata )
+        OmfRecord { RecordType::Pidata }
     {
         /*empty*/
     }
 
     OmfPidataRecord::OmfPidataRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Pidata, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Pidata, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Pidata );
         _frameNumber = reader.ReadUInt16( );
@@ -2741,13 +2741,13 @@ namespace Omf {
     //=========================================================================
 
     OmfLibhedRecord::OmfLibhedRecord( ):
-        OmfRecord ( RecordType::Libhed )
+        OmfRecord { RecordType::Libhed }
     {
         /*empty*/
     }
 
     OmfLibhedRecord::OmfLibhedRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Libhed, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Libhed, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Libhed );
         _moduleCount           = reader.ReadUInt32( );
@@ -2793,13 +2793,13 @@ namespace Omf {
 
     // LIBNAM (0xA6)
     OmfLibnamRecord::OmfLibnamRecord( ):
-        OmfRecord ( RecordType::Libnam )
+        OmfRecord { RecordType::Libnam }
     {
         /*empty*/
     }
 
     OmfLibnamRecord::OmfLibnamRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Libnam, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Libnam, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Libnam );
         while ( !reader.IsAtEnd( ) ) {
@@ -2831,13 +2831,13 @@ namespace Omf {
 
     // LIBLOC (0xA8)
     OmfLiblocRecord::OmfLiblocRecord( ):
-        OmfRecord ( RecordType::Libloc )
+        OmfRecord { RecordType::Libloc }
     {
         /*empty*/
     }
 
     OmfLiblocRecord::OmfLiblocRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Libloc, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Libloc, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader reader( rawPayload, RecordType::Libloc );
         while ( !reader.IsAtEnd( ) ) {
@@ -2873,13 +2873,13 @@ namespace Omf {
 
     // LIBDIC (0xAA)
     OmfLibdicRecord::OmfLibdicRecord( ):
-        OmfRecord ( RecordType::Libdic )
+        OmfRecord { RecordType::Libdic }
     {
         /*empty*/
     }
 
     OmfLibdicRecord::OmfLibdicRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::Libdic, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::Libdic, rawPayload, originalChecksum, hadValidChecksum }
     {
         OmfBinaryReader          reader( rawPayload, RecordType::Libdic );
         std::vector<std::string> currentGroup;
@@ -2936,13 +2936,13 @@ namespace Omf {
 
     // MsLibHeader (0xF0)
     OmfMsLibHeaderRecord::OmfMsLibHeaderRecord( ):
-        OmfRecord ( RecordType::MsLibHeader )
+        OmfRecord { RecordType::MsLibHeader }
     {
         /*empty*/
     }
 
     OmfMsLibHeaderRecord::OmfMsLibHeaderRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord ( RecordType::MsLibHeader, rawPayload, originalChecksum, hadValidChecksum )
+        OmfRecord { RecordType::MsLibHeader, rawPayload, originalChecksum, hadValidChecksum }
     {
         // Record length = rawPayload.size( ) + 1; pageSize = recordLength + 3 = rawPayload.size( ) + 4
         _pageSize = static_cast<std::uint16_t>( rawPayload.size( ) + 4u );
@@ -2961,7 +2961,7 @@ namespace Omf {
         }
         _pageSize = pageSize;
         std::size_t const requiredPadding { static_cast<std::size_t>( pageSize ) - 11u };
-        _paddingBytes.resize( requiredPadding, std::byte{ 0 } );
+        _paddingBytes.resize( requiredPadding, std::byte { } );
         MarkDirty( );
     }
 
@@ -3007,15 +3007,15 @@ namespace Omf {
 
     // MsLibEnd (0xF1)
     OmfMsLibEndRecord::OmfMsLibEndRecord( std::vector<std::byte> const padding ):
-        OmfRecord     ( RecordType::MsLibEnd ),
-        _paddingBytes ( std::move( padding ) )
+        OmfRecord     { RecordType::MsLibEnd },
+        _paddingBytes { std::move( padding ) }
     {
         /*empty*/
     }
 
     OmfMsLibEndRecord::OmfMsLibEndRecord( std::span<std::byte const> const rawPayload, std::uint8_t const originalChecksum, bool const hadValidChecksum ):
-        OmfRecord     ( RecordType::MsLibEnd, rawPayload, originalChecksum, hadValidChecksum ),
-        _paddingBytes ( rawPayload.begin( ), rawPayload.end( )                               )
+        OmfRecord     { RecordType::MsLibEnd, rawPayload, originalChecksum, hadValidChecksum },
+        _paddingBytes { rawPayload.begin( ), rawPayload.end( )                               }
     {
         /*empty*/
     }
@@ -3034,7 +3034,7 @@ namespace Omf {
     }
 
     //=========================================================================
-    // OmfModule Implementation
+    // OmfModule implementation
     //=========================================================================
 
     void OmfModule::AddRecord( std::unique_ptr<OmfRecord> record ) {
@@ -3184,9 +3184,7 @@ namespace Omf {
         for ( OmfLnamesRecord* lnames : GetRecordsOfType<OmfLnamesRecord>( ) ) {
             auto const& names { lnames->GetNames( ) };
             for ( std::size_t i { }, limit { names.size( ) }; i < limit; ++i, ++currentOneBased ) {
-                if ( ( names[i] == oldName ) &&
-                     symbolNameIndices.contains( currentOneBased ) &&
-                     !structuralNameIndices.contains( currentOneBased ) ) {
+                if ( ( names[i] == oldName ) && symbolNameIndices.contains( currentOneBased ) && !structuralNameIndices.contains( currentOneBased ) ) {
                     lnames->SetName( i, std::string( newName ) );
                     ++totalRenamed;
                 }
@@ -3369,8 +3367,7 @@ namespace Omf {
         file.seekg( 0, std::ios::beg );
 
         std::vector<std::byte> buffer( fileSize );
-        if ( ( fileSize > 0 ) &&
-             !file.read( reinterpret_cast<char*>( buffer.data( ) ), static_cast<std::streamsize>( fileSize ) ) ) {
+        if ( ( fileSize > 0 ) && !file.read( reinterpret_cast<char*>( buffer.data( ) ), static_cast<std::streamsize>( fileSize ) ) ) {
             throw OmfException( "Failed to read OMF file: " + filePath.string( ) );
         }
         return LoadFromMemory( buffer, options );
@@ -3380,10 +3377,7 @@ namespace Omf {
         std::ostringstream ss( std::ios::binary );
         ss << inputStream.rdbuf( );
         std::string const                str  { ss.str( ) };
-        std::span<std::byte const> const span (
-            reinterpret_cast<std::byte const*>( str.data( ) ),
-            str.size( )
-        );
+        std::span<std::byte const> const span ( reinterpret_cast<std::byte const*>( str.data( ) ), str.size( ) );
         return LoadFromMemory( span, options );
     }
 
@@ -3392,31 +3386,18 @@ namespace Omf {
         std::size_t offset      { };
         std::size_t recordIndex { };
         std::size_t libPageSize { };
-        bool        inModule    { false };
+        bool        inModule    { };
 
         while ( offset < buffer.size( ) ) {
             if ( ( offset + 3u ) > buffer.size( ) ) {
-                throw OmfParseException(
-                    "Truncated 3-byte OMF record header",
-                    offset,
-                    static_cast<RecordType>( buffer[offset] )
-                );
+                throw OmfParseException( "Truncated 3-byte OMF record header", offset, static_cast<RecordType>( buffer[offset] ) );
             }
 
             RecordType const    type         { static_cast<RecordType>( buffer[offset] ) };
-            std::uint16_t const recordLength {
-                static_cast<std::uint16_t>(
-                    static_cast<std::uint8_t>( buffer[offset + 1] ) |
-                    ( static_cast<std::uint8_t>( buffer[offset + 2] ) << 8 )
-                )
-            };
+            std::uint16_t const recordLength { static_cast<std::uint16_t>( static_cast<std::uint8_t>( buffer[offset + 1] ) | ( static_cast<std::uint8_t>( buffer[offset + 2] ) << 8 ) ) };
 
             if ( ( recordLength == 0 ) || ( ( offset + 3u + recordLength ) > buffer.size( ) ) ) {
-                throw OmfParseException(
-                    "OMF record length extends past end of file",
-                    offset,
-                    type
-                );
+                throw OmfParseException( "OMF record length extends past end of file", offset, type );
             }
 
             if ( type == RecordType::MsLibHeader ) {
@@ -3425,24 +3406,16 @@ namespace Omf {
 
             std::size_t const                payloadLength  { recordLength - 1u                              };
             std::span<std::byte const> const payloadSpan    { buffer.subspan( offset + 3u, payloadLength )   };
-            std::uint8_t const               actualChecksum {
-                static_cast<std::uint8_t>( buffer[offset + 3u + payloadLength] )
-            };
+            std::uint8_t const               actualChecksum { static_cast<std::uint8_t>( buffer[offset + 3u + payloadLength] ) };
 
             std::uint8_t sum { };
             for ( std::size_t i { }, limit { 3u + payloadLength }; i < limit; ++i ) {
-                sum = static_cast<std::uint8_t>(
-                    sum + static_cast<std::uint8_t>( buffer[offset + i] )
-                );
+                sum = static_cast<std::uint8_t>( sum + static_cast<std::uint8_t>( buffer[offset + i] ) );
             }
             std::uint8_t const expectedChecksum { static_cast<std::uint8_t>( ( ~sum ) + 1u ) };
 
-            bool const isMsLibRecord {
-                ( type == RecordType::MsLibHeader ) || ( type == RecordType::MsLibEnd )
-            };
-            bool const hadValidChecksum {
-                isMsLibRecord || ( actualChecksum == 0u ) || ( actualChecksum == expectedChecksum )
-            };
+            bool const isMsLibRecord { ( type == RecordType::MsLibHeader ) || ( type == RecordType::MsLibEnd ) };
+            bool const hadValidChecksum { isMsLibRecord || ( actualChecksum == 0u ) || ( actualChecksum == expectedChecksum ) };
 
             if ( !hadValidChecksum ) {
                 if ( options.checksumValidation == ChecksumValidation::ThrowException ) {
@@ -3450,25 +3423,17 @@ namespace Omf {
                 } else if ( ( options.checksumValidation == ChecksumValidation::WarnCallback ) &&
                             options.onChecksumWarning ) {
                     options.onChecksumWarning(
-                        OmfChecksumWarning{ offset, recordIndex, type, expectedChecksum, actualChecksum }
+                        OmfChecksumWarning { offset, recordIndex, type, expectedChecksum, actualChecksum }
                     );
                 }
             }
 
-            auto parsedRecord {
-                _ParseSingleRecord( type, payloadSpan, actualChecksum, hadValidChecksum, offset )
-            };
+            auto parsedRecord { _ParseSingleRecord( type, payloadSpan, actualChecksum, hadValidChecksum, offset ) };
 
-            if ( ( type == RecordType::Theadr ) ||
-                 ( type == RecordType::Lheadr ) ||
-                 ( type == RecordType::Rheadr ) ) {
+            if ( ( type == RecordType::Theadr ) || ( type == RecordType::Lheadr ) || ( type == RecordType::Rheadr ) ) {
                 result._modules.emplace_back( );
                 inModule = true;
-            } else if ( !inModule && !isMsLibRecord &&
-                        ( type != RecordType::Libhed ) &&
-                        ( type != RecordType::Libnam ) &&
-                        ( type != RecordType::Libloc ) &&
-                        ( type != RecordType::Libdic ) ) {
+            } else if ( !inModule && !isMsLibRecord && ( type != RecordType::Libhed ) && ( type != RecordType::Libnam ) && ( type != RecordType::Libloc ) && ( type != RecordType::Libdic ) ) {
                 result._modules.emplace_back( );
                 inModule = true;
             }
@@ -3483,9 +3448,7 @@ namespace Omf {
 
                     // In an MS-DOS .LIB file, each module is padded to a multiple of libPageSize
                     if ( ( libPageSize > 0 ) && ( ( offset % libPageSize ) != 0 ) ) {
-                        std::size_t const nextBoundary {
-                            ( ( offset + libPageSize - 1u ) / libPageSize ) * libPageSize
-                        };
+                        std::size_t const nextBoundary { ( ( offset + libPageSize - 1u ) / libPageSize ) * libPageSize };
                         std::size_t const padEnd { std::min( nextBoundary, buffer.size( ) ) };
                         result._modules.back( ).SetTrailingLibraryPadding(
                             std::vector<std::byte>(
@@ -3501,10 +3464,7 @@ namespace Omf {
             result._records.push_back( std::move( parsedRecord ) );
 
             if ( ( type == RecordType::MsLibEnd ) && ( offset < buffer.size( ) ) ) {
-                result._trailingLibraryDictionary.assign(
-                    buffer.begin( ) + static_cast<std::ptrdiff_t>( offset ),
-                    buffer.end( )
-                );
+                result._trailingLibraryDictionary.assign( buffer.begin( ) + static_cast<std::ptrdiff_t>( offset ), buffer.end( ) );
                 break;
             }
         }
@@ -3554,8 +3514,7 @@ namespace Omf {
                 output.insert( output.end( ), bytes.begin( ), bytes.end( ) );
 
                 RecordType const t { rec->GetRecordType( ) };
-                if ( ( ( t == RecordType::Modend ) || ( t == RecordType::Modend32 ) ) &&
-                     ( moduleIdx < _modules.size( ) ) ) {
+                if ( ( ( t == RecordType::Modend ) || ( t == RecordType::Modend32 ) ) && ( moduleIdx < _modules.size( ) ) ) {
                     auto const padding { _modules[moduleIdx].GetTrailingLibraryPadding( ) };
                     output.insert( output.end( ), padding.begin( ), padding.end( ) );
                     ++moduleIdx;
@@ -3564,11 +3523,7 @@ namespace Omf {
         }
 
         if ( !_trailingLibraryDictionary.empty( ) ) {
-            output.insert(
-                output.end( ),
-                _trailingLibraryDictionary.begin( ),
-                _trailingLibraryDictionary.end( )
-            );
+            output.insert( output.end( ), _trailingLibraryDictionary.begin( ), _trailingLibraryDictionary.end( ) );
         }
 
         return output;
@@ -3577,10 +3532,7 @@ namespace Omf {
     void OmfFile::SaveToStream( std::ostream& outputStream, OmfSaveOptions const& options ) const {
         std::vector<std::byte> const bytes { SerializeToMemory( options ) };
         if ( !bytes.empty( ) ) {
-            outputStream.write(
-                reinterpret_cast<char const*>( bytes.data( ) ),
-                static_cast<std::streamsize>( bytes.size( ) )
-            );
+            outputStream.write( reinterpret_cast<char const*>( bytes.data( ) ), static_cast<std::streamsize>( bytes.size( ) ) );
         }
     }
 

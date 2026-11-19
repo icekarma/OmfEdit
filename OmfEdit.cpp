@@ -99,7 +99,7 @@ int main( int argc, char* argv[] ) {
         return 0;
     } catch ( Omf::OmfParseException const& ex ) {
         std::cerr << std::format(
-            "OMF Parse Error at offset 0x{:X} (record 0x{:02X}): {}\n",
+            "OMF parse error at offset 0x{:X} (record 0x{:02X}): {}\n",
             ex.GetFileOffset( ),
             static_cast<unsigned>( ex.GetRecordType( ) ),
             ex.what( )
